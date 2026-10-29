@@ -1,0 +1,21 @@
+{
+  "name": "Simulador Conductor Versión Gancho",
+  "short_name": "SimGancho",
+  "description": "Simulador de conductor VTC, taxi y BlaBlaCar en España (juego; pasajeros y tarifas ficticios).",
+  "lang": "es",
+  "dir": "ltr",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1116",
+  "theme_color": "#161b22",
+  "categories": ["games", "simulation"],
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
