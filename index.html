@@ -1052,7 +1052,7 @@ function drawZone(fit){
   const st=S.settings;
   if(zoneCircle)map.removeLayer(zoneCircle);
   if(centerMk)map.removeLayer(centerMk);
-  zoneCircle=L.circle(st.center,{radius:st.radius*1000,color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:"6 6"}).addTo(map);
+  zoneCircle=((window.V29ZONE&&V29ZONE(st))||L.circle(st.center,{radius:st.radius*1000,color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:"6 6"})).addTo(map);
   centerMk=L.circleMarker(st.center,{radius:4,color:"#21d07a",fillOpacity:1}).addTo(map);
   infoLayer.clearLayers();
   const city=nearestCity(st.center,40),air=airportFor(st.center),sta=stationFor(city);
@@ -3205,7 +3205,7 @@ $("vozStop").onclick=()=>vozCancel();
 if(SS()){try{SS().addEventListener?SS().addEventListener("voiceschanged",vozFill):(SS().onvoiceschanged=vozFill);}catch(e){}}
 syncVozUI();setTimeout(vozFill,600);setTimeout(vozFill,2500);
 // ---------- Móvil (Android) y app instalable (PWA) ----------
-const APP_VER="28.0";
+const APP_VER="29.0";
 const MQ_MOB=window.matchMedia("(max-width:899px),(max-height:520px) and (pointer:coarse)");
 function isMob(){return MQ_MOB.matches;}
 // Márgenes al encuadrar la ruta: en PC la tarjeta está a la izquierda; en móvil, abajo (vertical) o a la izquierda (horizontal)
@@ -4319,7 +4319,9 @@ const PRIV_Q=[["¿Tienes pareja, {D}?","Le cuentas algo, sin entrar en detalles.
   ["¿Qué haces cuando no conduces?","Le hablas de tus aficiones."],["¿Tienes Instagram o algo así?","Le dices que casi no usas redes."],["¿Y tu familia qué dice de que trabajes de noche?","Le cuentas que ya están acostumbrados."],["¿Tienes novio? Bueno… o novia, perdona.","Contestas con una sonrisa, sin dar detalles."]];
 const INT_Q=[["Te lo tengo que decir: llevo todo el viaje empalmado mirándote. ¿Te das cuenta de lo buena que estás?"],["Si no estuvieras trabajando te follaría ahora mismo en el asiento de atrás."],["Me encanta cómo conduces… y cómo se te marca el escote. Me tienes muy cachondo."],
   ["Qué pena que el viaje se acabe. Contigo me correría sin pensarlo."],["¿Siempre eres así de puta o solo te pones así con los clientes?"],["Me has puesto a mil. ¿Me dejas tu número para follarte cuando quieras?"],["Con una conductora como tú, iría a cualquier sitio… y te comería entera."],
-  ["Me estás poniendo muy caliente con esa voz. Baja la ventanilla y déjame verte mejor."],["Llevo imaginándome cómo te la chupo desde que subí."],["{D}, me tienes muy cachondo. Si paras un momento te como el coño."]];
+  ["Me estás poniendo muy caliente con esa voz. Baja la ventanilla y déjame verte mejor."],["Llevo imaginándome cómo te la chupo desde que subí."],["{D}, me tienes muy cachondo. Si paras un momento te como el coño."],
+  ["No puedo dejar de mirarte el culo. ¿Te lo digo o me callo?"],["Si paras en un sitio oscuro te bajo las bragas y te follo ahí mismo."],["Me tienes empalmado desde el primer semáforo. ¿Lo notas?"],["Qué ganas de correrme en tu boca, {D}."],["Llevas el escote tan bajo que se me va la vista. ¿Lo haces a propósito?"],
+  ["Me muero por meterte la polla hasta el fondo."],["¿Te gusta que te hablen sucio o prefieres que me calle?"],["Llevo todo el viaje imaginándome tu coño mojado."],["Si no estuvieras trabajando te pediría que te sentaras encima de mí."],["{D}, tienes un cuerpo de puta madre. Me tienes loco."]];
 const REQS=[["cargador","🔌","¿Tienes un cargador de móvil? Me queda un 3 %.","Le dejas el cable USB.","Lo siento, no llevo cargador."],["panuelos","🤧","¿Tendrías un pañuelo de papel, por favor?","Le pasas un paquete de pañuelos.","Lo siento, se me han acabado."],
   ["agua","💧","¿Llevarías una botellita de agua?","Le das una botella de agua.","Perdona, hoy no llevo agua."],["temp","🌡️","¿Puedes subir un poco la temperatura? Tengo frío.","Subes un par de grados.","Lo dejo así, que se empañan los cristales."],
   ["temp2","❄️","¿Puedes poner un poco más fuerte el aire?","Pones el aire más fuerte.","Lo siento, ya va bastante fuerte."],["ventana","🪟","¿Te importa si bajo la ventanilla?","Le dices que sí, sin problema.","Prefiero cerrada, por el ruido."],
@@ -5396,6 +5398,377 @@ syncV28UI();
 window.V28={S:v28S,on:V28on,T:()=>trip&&trip.v28,R:v28R,DEF:V28_DEF,int:v28IntAdd,intUI:v28IntUI,hi:()=>v28Hi(),ligar:()=>v28Ligar(),ligProb:v28LigProb,mirror:()=>{const x=v28Adults()[0];if(x)v28Mirror(x);},
   tourist:()=>v28Tourist(),makeTourist:v28MakeTourist,occ:()=>v28Occ(),smoke:()=>v28Smoke(),urg:()=>v28Urg(),disc:()=>v28Disc(),purge:v28Purge,prune:v28PruneStops,rev:v28Rev,
   spots:V28_SPOTS,hosp:V28_HOSP,nearHosp:v28Hosp,cops:V28_COPS,copPlan:v28CopPlan,copSec:v28CopSec,tick:()=>v28Tick(),plan:v28Plan,cd:()=>S.v28cd};
+
+
+// ==================== v29: mapa limpio en móvil, conversaciones que siguen, paradas, ETS2… (todo lo inventado es SIMULADO; lugares reales) ====================
+const V29_DEF={zona:true,intensa:true,habituales:true,parada:true,ets2:true,datos:true,bloquear:true,numero:true,pago:true,ambientador:true};
+const V29_LBL={zona:"🗺️ Mapa ligero en móvil: zona sin trazo discontinuo y círculos enormes ocultos",intensa:"🌡️ La conversación intensa no baja sola: solo si tú cambias de tema o la cortas",
+  habituales:"🔁 Clientes habituales (3+ viajes) buscan conversación intensa y tontean",parada:"☕ Botón «Parada / Descanso» con gente que se acerca a la ventanilla",
+  ets2:"🚚 Kilómetros equivalentes en ETS2 en ofertas y viajes",datos:"📚 Más nombres, apellidos, profesiones, temas y pueblos reales",bloquear:"🚫 Bloquear clientes",
+  numero:"📱 Pedir o dar el número / quedar (sin nada explícito)",pago:"💳 Pago con tarjeta fallido (muy raro)",ambientador:"🌸 Botón «Ambientador» para quitar olores"};
+function v29S(){if(!S.settings.v29)S.settings.v29={};const s=S.settings.v29;for(const k in V29_DEF)if(s[k]==null)s[k]=V29_DEF[k];if(!(+s.escala>0))s.escala=19;return s;}
+const V29off=()=>!!(window.NO_V29||window.NO_V28||window.NO_V27||window.NO_V26);
+const V29on=k=>!V29off()&&!!v29S()[k];
+const v29R=()=>window.V29R||{};
+const v29rn=a=>a[Math.floor(Math.random()*a.length)];
+const v29cl=(x,a,b)=>Math.max(a,Math.min(b,x));
+// ---------- Enfriamientos (tiempo real) ----------
+const V29_CD={calle:150e3,numero:600e3,pago:2*36e5,habitual:300e3,global:40e3};
+function v29CdOk(k){if(v29R().nocd)return true;const c=S.v29cd||{},n=Date.now();if(c[k]&&n-c[k]<(V29_CD[k]||0))return false;if(c.global&&n-c.global<V29_CD.global)return false;return true;}
+function v29Cd(k){S.v29cd=S.v29cd||{};S.v29cd[k]=S.v29cd.global=Date.now();save();}
+// ---------- Sonidos y voz ----------
+if(!window.NO_V29)Object.assign(SND_R,{
+  v29calle:[[0,660,.08,"triangle",.18],[.1,660,.08,"triangle",.18],[.22,880,.16,"triangle",.18]],
+  v29num:[[0,784,.1,"sine",.18],[.12,988,.1,"sine",.18],[.24,1175,.18,"sine",.18]],
+  v29pago:[[0,440,.14,"square",.14],[.18,330,.22,"square",.14]],
+  v29amb:[[0,1318,.05,"sine",.12],[.07,1568,.05,"sine",.12],[.14,1760,.12,"sine",.12]],
+  v29hab:[[0,587,.1,"sine",.17],[.12,784,.1,"sine",.17],[.24,698,.16,"sine",.17]]});
+for(const x of [["v29calle","☕ Alguien se acerca a la ventanilla"],["v29num","📱 Número o cita"],["v29pago","💳 Pago con tarjeta fallido"],["v29amb","🌸 Ambientador"],["v29hab","🔁 Cliente habitual"]])
+  if(!window.NO_V29&&!SND_KEYS.some(y=>y[0]===x[0]))SND_KEYS.push(x);
+if(!window.NO_V29&&!VOZ_KEYS.some(y=>y[0]==="v29"))VOZ_KEYS.push(["v29","Paradas, números, pagos y habituales v29"]);
+const v29say=(t,snd)=>{try{say("v29",t,{after:snd||undefined,tag:"v29"});}catch(e){}};
+const v29alert=(snd,title,body,ic,voz)=>{try{alertUser(snd,title,body,ic);}catch(e){}if(voz)v29say(voz,snd);};
+function v29Ask(q){q.vcat="v29";return v27Ask(q);}
+function v29Log(ic,t){try{if(trip&&!window.NO_V28)v28Log(ic,t);else mlog(ic,t);}catch(e){}}
+// Diario: apuntes de la jornada (se guardan en el turno)
+function v29Note(t){if(window.NO_V29)return;S.v29notes=S.v29notes||[];S.v29notes.push({t,ts:Date.now(),sh:S.shift&&S.shift.id||null});if(S.v29notes.length>300)S.v29notes.splice(0,S.v29notes.length-300);save();}
+
+// ---------- (1) Fallo gráfico en móvil (paquetería) ----------
+// Causa probable: el círculo de la zona de trabajo (L.circle de decenas de km con trazo discontinuo) NO lo recorta Leaflet;
+// a zoom de calle es un path SVG gigante con miles de guiones que el móvil no rasteriza bien, y la hoja inferior estaba DENTRO del contenedor del mapa,
+// encima de las capas de teselas: la zona vacía de la hoja mostraba restos de teselas.
+const v29Lite=()=>{try{return isMob()||document.body.classList.contains("fxlite");}catch(e){return false;}};
+function v29ZonePoly(c,km,n){n=n||(v29Lite()?96:128);const la=c[0]*Math.PI/180,dLat=km/6371*180/Math.PI,dLon=dLat/Math.max(.1,Math.cos(la)),P=[];
+  for(let i=0;i<n;i++){const t=i/n*2*Math.PI;P.push([c[0]+dLat*Math.sin(t),c[1]+dLon*Math.cos(t)]);}return P;}
+window.V29ZONE=st=>{if(window.NO_V29)return null;const lite=v29Lite()&&v29S().zona;
+  const pg=L.polygon(v29ZonePoly(st.center,st.radius),{color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:lite?null:"6 6",interactive:false});pg.v29zone=true;return pg;};
+function v29BigCheck(){if(window.NO_V29)return;const sz=map.getSize(),lim=2*Math.max(sz.x,sz.y),on=v29S().zona&&v29Lite();
+  map.eachLayer(l=>{if(l instanceof L.Circle&&l._path&&l._radius!=null){const big=on&&l._radius>lim;const d=big?"none":"";if(l._path.style.display!==d)l._path.style.display=d;}});}
+if(!window.NO_V29){
+  map.on("layeradd",e=>{try{const l=e.layer;if(!l||!l.options||!l.setStyle||!v29S().zona||!v29Lite())return;
+    if(l.options.dashArray){l.options.v29dash=l.options.dashArray;l.setStyle({dashArray:null});}if(l instanceof L.Circle)setTimeout(v29BigCheck,0);}catch(_){}});
+  map.on("zoomend viewreset resize",()=>{try{v29BigCheck();}catch(e){}});}
+// Hoja inferior fuera del contenedor del mapa; en móvil vertical el mapa acaba justo donde empieza la hoja
+const V29M={sh:false,fit:null,n:0};
+const v29Port=()=>isMob()&&!(innerWidth>innerHeight&&innerHeight<=520);
+const v29OvVis=()=>{const ov=$("overlay");return !!(ov&&ov.children.length>0&&ov.offsetHeight>0&&getComputedStyle(ov).display!=="none");};
+function v29Wrap(){if(window.NO_V29||$("mapWrap"))return;const m=$("map"),w=document.createElement("div");w.id="mapWrap";m.parentNode.insertBefore(w,m);w.appendChild(m);
+  for(const id of ["overlay","toast"]){const e=$(id);if(e&&e.parentNode===m)w.appendChild(e);}try{map.invalidateSize({pan:false});}catch(e){}}
+function v29Refit(){const f=V29M.fit;if(f&&Date.now()-f.at<2500){try{V29M.re=true;map.fitBounds(f.b,Object.assign(fitPad(),{animate:false}));}catch(e){}finally{V29M.re=false;}}}
+function v29Shrink(){if(window.NO_V29)return;const w=$("mapWrap"),m=$("map");if(!w)return;let h=0;
+  if(v29Port()&&v29OvVis())h=Math.max(120,Math.round(w.clientHeight-$("overlay").offsetHeight));
+  if(h){if(Math.abs(m.offsetHeight-h)>1||!V29M.sh){m.style.height=h+"px";V29M.sh=true;V29M.n++;try{map.invalidateSize({pan:false,animate:false});}catch(e){}v29Refit();}}
+  else if(V29M.sh){m.style.height="";V29M.sh=false;try{map.invalidateSize({pan:false});}catch(e){}}
+  document.body.classList.toggle("v29sh",V29M.sh);}
+let v29Raf=0;const v29Q=()=>{if(v29Raf)return;v29Raf=requestAnimationFrame(()=>{v29Raf=0;try{v29Shrink();}catch(e){console.error(e);}});};
+if(!window.NO_V29){
+  {const _fb=map.fitBounds;map.fitBounds=function(b){try{if(!V29M.re)V29M.fit={b:L.latLngBounds(b),at:Date.now()};}catch(e){}return _fb.apply(this,arguments);};}
+  {const _fp=fitPad0;fitPad0=function(){const o=_fp.apply(this,arguments);try{if(isMob()&&v29Port()&&v29OvVis())o.paddingBottomRight=[20,20];}catch(e){}return o;};}
+  v29Wrap();
+  try{if(window.ResizeObserver){const ro=new ResizeObserver(v29Q);ro.observe($("overlay"));ro.observe($("mapWrap"));}}catch(e){}
+  new MutationObserver(v29Q).observe($("overlay"),{childList:true});addEventListener("resize",v29Q);try{MQ_MOB.addEventListener("change",v29Q);}catch(e){}
+  setInterval(v29Q,1500);
+  try{drawZone(false);}catch(e){}
+  document.head.insertAdjacentHTML("beforeend",`<style>
+#mapWrap{position:relative;flex:1;min-width:0;height:100%;overflow:hidden;background:#0b0e12;isolation:isolate}
+#mapWrap>#map{width:100%;height:100%;flex:none;z-index:0;isolation:isolate}
+#overlay{font-size:12px;font-size:.75rem;line-height:1.5;-webkit-tap-highlight-color:transparent;isolation:isolate}
+#overlay a{color:#0078A8}
+#overlay:empty{display:none}
+.v29ver{display:inline-block;font-size:11px;font-weight:700;color:#9fb3c8;border:1px solid #2c3644;border-radius:8px;padding:0 6px;margin-left:6px;vertical-align:middle}
+#v29VerA{margin:4px 0 0 0}
+@media (max-width:899px),(max-height:520px) and (pointer:coarse){
+  #overlay{background:#161b22;contain:paint;transform:none;will-change:auto}
+  #overlay .req,#overlay .trip{background:#161b22}
+  body.v29sh #overlay{border-radius:0}body.v29sh #overlay .req,body.v29sh #overlay .trip{border-radius:0}
+}
+</style>`);}
+// Etiqueta de versión visible (Ajustes y cabecera «Hoy»)
+function v29Ver(){if(window.NO_V29)return;const h=$("secHoy")&&$("secHoy").querySelector("h2");if(h&&!h.querySelector(".v29ver"))h.insertAdjacentHTML("beforeend",` <span class="v29ver" id="v29VerH">v${APP_VER}</span>`);
+  const hd=document.querySelector("#panel header");if(hd&&!$("v29VerA"))hd.insertAdjacentHTML("beforeend",`<div id="v29VerA" class="v29ver">Versión ${APP_VER}</div>`);}
+v29Ver();
+
+// ---------- (2) La conversación intensa se mantiene (o sube) hasta que Alba cambia el rumbo ----------
+let V29NEG=false;
+{const _qa=v28Ask;v28Ask=function(q){try{if(q&&q.k==="v28int"&&q.on&&!window.NO_V29){const on=q.on;q.on=a=>{V29NEG=true;try{return on(a);}finally{V29NEG=false;}};}}catch(e){}return _qa.apply(this,arguments);};}
+{const _ia=v28IntAdd;v28IntAdd=function(d,why){const T=trip&&trip.v28,on=T&&V29on("intensa");
+  if(on&&T.esc&&d<0){if(!why&&!V29NEG){T.intAt=Date.now();return;}// bajada automática: no se aplica
+    T.esc=false;T.escOff=Date.now();(T.v29ch=T.v29ch||[]).push(why||"cambias de tema");v29Log("🌡️","Cambias el rumbo de la conversación: deja de subir");}
+  const v=_ia.apply(this,arguments);
+  try{if(on&&!T.esc&&Math.round(T.int)>=7&&d>0){T.esc=true;T.escAt=T.riseAt=Date.now();T.escN=(T.escN||0)+1;}}catch(e){console.error(e);}return v;};
+  try{if(window.V28)V28.int=v28IntAdd;}catch(e){}}
+function v29Prof(){const A=v28Adults();let k="calm";for(const x of A){const p=x.p;if(p.flirt||p.v29rep)return "flirt";if(p.conv==="muy"||p.conv==="pesado")k="talk";}
+  const r=trip.r;if(r.drunk||(r.v28o&&/despedida|cumple/.test(r.v28o.k)))k="talk";return k;}
+const V29_RISE={flirt:[60e3,1,10,"sigue tonteando contigo (nada explícito)"],talk:[90e3,.5,8,"no para de hablar y se anima cada vez más"]};
+
+// ---------- (3) Clientes habituales (3+ viajes): buscan conversación intensa y tontean ----------
+function v29RepOf(r){try{if(!r||!r.per||!r.per.regId)return null;const g=regGet(r.per.regId),N=v29R().repN!=null?v29R().repN:3;return g&&g.kind==="pax"&&g.n>=N?g:null;}catch(e){return null;}}
+function v29RepStart(T){const r=trip.r,g=v29RepOf(r);T.v29repChk=1;if(!g||!V29on("habituales")||v28Kids())return;const p=r.per,nm=v28nm(p);
+  p.flirt=true;p.v29rep=g.n;T.v29rep={n:g.n,nm};const F=v29R();
+  if(V28on("intens")){T.int=Math.max(T.int||0,5);T.lvl=v28Lvl(Math.round(T.int));T.intAt=Date.now();T.intMax=Math.max(T.intMax||0,Math.round(T.int));}
+  T.repAt=Date.now()+(F.repAt!=null?F.repAt*1000:rnd(20,50)*1000);
+  v29alert("v29hab",`🔁 ${nm}, cliente habitual`,`${g.n} viajes contigo: viene con ganas de charla y de tontear (simulado)`,"🔁",`${nm} ya ha viajado contigo ${g.n} veces. Viene con ganas de charla.`);
+  v29Log("🔁",`${nm}, cliente habitual (${g.n} viajes contigo), vuelve a buscar conversación intensa y a tontear contigo`);S.trip=trip;save();try{v28IntUI();}catch(e){}}
+
+// ---------- (8) Número o cita: Alba lo pide (botón) ----------
+function v29PideTarget(){if(!trip||trip.phase!==2||trip.r.svc==="paquete"||v28Kids())return null;try{return v28LigTarget();}catch(e){return null;}}
+function v29PideHTML(){if(!V29on("numero"))return "";const x=v29PideTarget();if(!x)return "";const T=v28T(),d=T.v29pide;
+  return `<button class="btn v29b" id="v29Pide" data-v29="pide"${d?" disabled":""} title="Simulado y con respeto: la respuesta depende del perfil">📱 Pedirle el número / una cita a ${esc(v28nm(x.p))}${d?(d.out==="si"?" (¡ha dicho que sí!)":" (ha dicho que no)"):""}</button>`;}
+function v29PideProb(x){const T=v28T(),p=x.p;let s;try{s=v28LigProb(p,v28Partner(x));}catch(e){s=.3;}
+  if((T.intMax||0)>=7)s+=.15;if(T.v29rep)s+=.2;if(p.flirt)s+=.1;return v29cl(s,.03,.95);}
+function v29Pide(){const x=v29PideTarget();if(!x)return;const T=v28T();if(T.v29pide)return;const p=x.p,nm=v28nm(p);
+  v29Ask({k:"v29pide",ic:"📱",title:`¿Le pides algo a ${nm}?`,body:`<div class="sub">Tú decides. La respuesta depende de su perfil (simulado, nada explícito).</div>`,
+    opts:[["num","📱 Pedirle el número","ok"],["cita","☕ Proponerle quedar un día","ok"],["nada","↩️ Mejor no","no"]],trip:true,pkey:x.P.key,
+    on:a=>{if(a==="nada"||a==="ign")return;const F=v29R(),pr=v29PideProb(x),si=F.pideOut?F.pideOut==="si":Math.random()<pr,cita=a==="cita";
+      T.v29pide={k:a,out:si?"si":"no",nm,p:r2(pr)};
+      const q=si?v29rn(cita?["¡Vale! Un café cuando quieras, me apetece.","Pues sí, quedamos. Me has caído genial.","Venga, ¿el finde?"]:["Claro, apunta. Me ha encantado el viaje.","¡Sí! Toma, y escríbeme cuando quieras.","Venga, te lo doy. Ya me dirás."])
+        :v29rn(cita?["Uy, eres un encanto, pero mejor no. ¡Gracias!","Tengo a alguien, lo siento. Pero me alegra que me lo digas.","Mejor lo dejamos en el viaje, ¿vale?"]:["Prefiero no darlo, perdona.","Mejor no, pero gracias por el viaje.","Jaja, no, pero gracias."]);
+      if(si){v26Eff(x.P.key,.06,"me cayó genial, muy simpática",.03);T.int=Math.min(v28Kids()?3:10,(T.int||0)+1);}else v26Eff(x.P.key,p.rx==="molesta"?-.06:0,p.rx==="molesta"?"me incomodó un poco que me pidiera el número":"");
+      v29alert("v29num",si?`📱 ${nm} dice que sí`:`📱 ${nm} dice que no`,"«"+q+"»","📱",`${nm}: ${q}`);
+      v29Log("📱",`Le ${cita?"propones quedar":"pides el número"} a ${nm}: ${si?"dice que sí":"dice que no, con educación"}`);S.trip=trip;save();if(!animating)showTrip(false);}});}
+// ---------- (7) Bloquear clientes ----------
+const v29Blk=()=>{const s=v29S();return Array.isArray(s.block)?s.block:(s.block=[]);};// en S.settings: va en exportar/importar
+function v29IsBlk(per,id){if(!V29on("bloquear"))return false;const L=v29Blk();if(!L.length)return false;id=id||(per&&per.regId);
+  return L.some(b=>(id&&b.id===id)||(per&&b.name&&b.name===(per.name||per.nom)&&(b.edad==null||b.edad===per.edad)));}
+function v29Block(per,kind,id){if(!per)return;id=id||per.regId||null;if(v29IsBlk(per,id))return toast("Ya estaba bloqueado");
+  v29Blk().push({id,name:per.name||per.nom||"¿?",edad:per.edad==null?null:per.edad,kind:kind||"pax",ts:Date.now()});save();
+  toast(`🚫 ${per.name||per.nom} bloqueado: no volverá a pedirte (se desbloquea en Ajustes)`);v29Note(`He bloqueado a ${per.name||per.nom}: no quiero volver a llevarle.`);try{regUI();}catch(e){}try{v29BlkUI();}catch(e){}}
+function v29Unblock(i){const L=v29Blk(),b=L[i];if(!b)return;L.splice(i,1);save();toast(`✅ ${b.name} desbloqueado`);try{regUI();}catch(e){}v29BlkUI();}
+function v29BlkUI(){const e=$("v29BlkList");if(!e)return;const L=v29Blk();
+  e.innerHTML=L.length?L.map((b,i)=>`<div class="regr"><span>${b.kind==="pq"?"📦":"🧑"} <b>${esc(b.name)}</b>${b.edad!=null?", "+b.edad:""} · ${agoTxt(b.ts)}</span><button class="btn-xs" data-v29="unblk" data-i="${i}">Desbloquear</button></div>`).join(""):'<div class="hint">No has bloqueado a nadie.</div>';}
+{const _rc=regCands;regCands=function(){const L=_rc.apply(this,arguments);try{if(V29on("bloquear"))return L.filter(g=>!v29IsBlk(g.per,g.id));}catch(e){}return L;};}
+{const _rr=regRecord;regRecord=function(per){try{if(per&&v29IsBlk(per))return null;}catch(e){}return _rr.apply(this,arguments);};}
+{const _rw=regW;regW=function(g){let w=_rw.apply(this,arguments);try{if(!V29off()&&g&&g.v29){if(g.v29.num||g.v29.cita)w*=3;if(g.v29.cut)w*=.3;}}catch(e){}return w;};}
+{const _ru=regUI;regUI=function(){const v=_ru.apply(this,arguments);try{if(!V29on("bloquear")||!$("regList"))return v;const L=regsS().slice().sort((a,b)=>((b.last||{}).ts||0)-((a.last||{}).ts||0)).slice(0,15),rows=$("regList").querySelectorAll(".regr");
+  rows.forEach((row,i)=>{const g=L[i];if(!g)return;const b=v29IsBlk(g.per,g.id),k=g.v29&&(g.v29.cita?" · ☕ cita":g.v29.num?" · 📱 tiene tu número":"");
+    if(k&&!row.querySelector(".v29tg"))row.insertAdjacentHTML("beforeend",`<span class="v29tg">${k}</span>`);
+    if(!row.querySelector("[data-v29]"))row.insertAdjacentHTML("beforeend",b?`<span class="v29tg">🚫 bloqueado</span>`:`<button class="btn-xs v29blk" data-v29="blkreg" data-id="${g.id}">🚫 Bloquear</button>`);});}catch(e){console.error(e);}return v;};}
+// Botones de la tarjeta del viaje (pedir número / bloquear)
+{const _cx=ctxHTML;ctxHTML=function(r){let h=_cx.apply(this,arguments);if(V29off()||!r||r.svc==="paquete")return h;
+  try{const inTrip=trip&&trip.r===r;if(inTrip){if(trip.phase===2&&trip.v28&&trip.v28.p2)h+=v29PideHTML();
+    if(V29on("bloquear")&&r.per)h+=v29IsBlk(r.per)?`<div class="sub v29tg">🚫 Cliente bloqueado: no volverá a pedirte</div>`:`<button class="btn-xs v29blk" id="v29BlkT" data-v29="blktrip">🚫 Bloquear a ${esc(r.per.name||"este cliente")}</button>`;}}catch(e){console.error(e);}return h;};}
+// ---------- Pulso v29 en viaje (cada segundo, tiempo real) ----------
+function v29Tick(){if(V29off()||!trip||!trip.v28||trip.r.svc==="paquete")return;const T=trip.v28,now=Date.now(),F=v29R();
+  if(T.esc&&V29on("intensa"))T.intAt=now;// nunca baja sola
+  if(trip.phase!==2||animating||V26C||V26Q.some(q=>q.trip))return v29PideUpd();
+  if(T.p2&&!T.v29repChk)v29RepStart(T);
+  if(T.repAt&&now>=T.repAt&&V28on("intens")){T.repAt=0;v28IntAdd(Math.max(2,7-Math.round(T.int||0)),"cliente habitual: vuelve a tontear contigo");T.hiAt=T.hiAt||now+rnd(4,10)*1000;}
+  if(T.esc&&V29on("intensa")&&!v28Kids()){const pr=v29Prof(),R=V29_RISE[pr];if(R){const iv=F.rise!=null?F.rise*1000:R[0];
+    if(now-(T.riseAt||T.escAt||now)>=iv&&(T.int||0)<R[2]){T.riseAt=now;v28IntAdd(R[1],R[3]);}}
+    if(Math.round(T.int||0)>=7&&!T.hiAt&&now-(T.hiLast||T.escAt||0)>(F.rearm!=null?F.rearm*1000:150e3)){T.hiAt=now+rnd(5,20)*1000;T.hiLast=now;}}
+  v29PideUpd();}
+function v29PideUpd(){const b=$("v29Pide"),T=trip&&trip.v28;if(!b||!T)return;const d=!!T.v29pide;if(b.disabled!==d)b.disabled=d;}
+setInterval(()=>{try{v29Tick();}catch(e){console.error(e);}},1000);
+// ---------- Clics de los botones v29 (captura: la hoja corta la propagación) ----------
+document.addEventListener("click",ev=>{const b=ev.target&&ev.target.closest&&ev.target.closest("[data-v29]");if(!b||V29off())return;const a=b.dataset.v29;
+  ev.stopPropagation();ev.preventDefault();
+  try{if(a==="pide")v29Pide();
+  else if(a==="blktrip"){if(trip&&trip.r.per){v29Block(trip.r.per,"pax");b.outerHTML=`<div class="sub v29tg">🚫 Cliente bloqueado: no volverá a pedirte</div>`;}}
+  else if(a==="blkreg"){const g=regGet(b.dataset.id);if(g)v29Block(g.per,g.kind,g.id);}
+  else if(a==="unblk")v29Unblock(+b.dataset.i);
+  else if(a==="blkhist"){const e=(HM.f||[])[+b.dataset.i];if(e)v29BlockHist(e);}
+  else if(a==="stop")v29StopToggle();
+  else if(a==="amb")v29Amb();}catch(e){console.error(e);}},true);
+
+// ---------- (4) Parada / Descanso: gente que se acerca a la ventanilla (todo simulado; sitios reales) ----------
+const V29_ASP={m:["chaqueta vaquera y gorra","traje con la corbata aflojada","chándal y zapatillas blancas","abrigo largo y bufanda","camisa de flores","sudadera con capucha","barba cuidada y gafas de sol","ropa de trabajo con chaleco reflectante","mochila de estudiante"],
+  f:["vestido de fiesta y los tacones en la mano","abrigo largo y bufanda","chándal y coleta","chaqueta de cuero","uniforme de trabajo","gafas grandes y bolso al hombro","vaqueros y zapatillas","mochila de estudiante","gabardina y paraguas"]};
+const V29_ACT=[["educado","educada"],["simpático","simpática"],["insistente","insistente"],["tímido","tímida"],["con prisa","con prisa"],["nervioso","nerviosa"],["achispado (ha bebido algo)","achispada (ha bebido algo)"]];
+const V29_KIND={
+  ligar:{ic:"😏",n:"intenta ligar",dia:1.5,noche:4,q:["¡Hola! Perdona que te moleste, pero tenía que decírtelo: tienes una sonrisa preciosa.","¿A qué hora acabas? Te invito a algo cuando termines.","Oye, ¿tienes Instagram? Es que me has caído genial.","¿Siempre paras por aquí? Así sé dónde encontrarte…"]},
+  tabaco:{ic:"🚬",n:"pide tabaco",dia:2,noche:3,q:["Perdona, ¿no tendrás un cigarro?","Oye, ¿me das un cigarrillo? Te lo pago si quieres."],dar:"🚬 Darle uno"},
+  fuego:{ic:"🔥",n:"pide fuego",dia:2,noche:2.5,q:["Perdona, ¿tienes fuego?","¿Me dejas un mechero un segundo?"],dar:"🔥 Darle fuego"},
+  bebida:{ic:"💧",n:"pide algo de beber",dia:.6,noche:2.5,q:["¿No tendrás un poco de agua? Me muero de sed.","Oye, ¿te sobra algo de beber? Lo que sea."],dar:"💧 Darle tu botella de agua"},
+  dinero:{ic:"🪙",n:"pide dinero",dia:2,noche:1.5,q:["Perdona, ¿me puedes dar algo suelto para el autobús?","¿Tienes un euro? Es para un bocadillo."],dar:"🪙 Darle unas monedas"},
+  dir:{ic:"🗺️",n:"pregunta una dirección",dia:4,noche:2,q:[],dar:"🗺️ Indicarle el camino"}};
+const v29StOn=()=>!!(S.v29stop&&S.v29stop.on);
+const v29Night=()=>{try{const h=simNow().h;return h>=21||h<6;}catch(e){return false;}};
+function v29StGap(){const F=v29R();if(F.stGap!=null)return F.stGap*1000;const n=v29Night();return rnd(n?90:180,n?240:480)*1000;}
+function v29StopToggle(){if(!V29on("parada"))return;if(v29StOn())return v29StopEnd("Terminas la parada");
+  if(trip||curReq)return toast("Solo puedes parar cuando no tienes viaje ni oferta");
+  S.v29stop={on:true,at:Date.now(),n:0,log:[],next:Date.now()+v29StGap()};save();
+  toast("☕ Parada / descanso: coche aparcado (simulado). Puede acercarse gente a la ventanilla.");v29say("Haces una parada.");v29StopUI();}
+function v29StopEnd(why){const s=S.v29stop;if(!s||!s.on)return;s.on=false;s.end=Date.now();save();if(why)toast("▶️ "+why);v29StopUI();}
+function v29StopUI(){if(V29off())return;const on=V29on("parada"),st=v29StOn(),dis=!st&&!!(trip||curReq);
+  let b=$("v29Stop");if(!on){if(b)b.remove();const m=$("v29StopM");if(m)m.remove();return;}
+  if(!b){const o=$("btnOnline");if(!o)return;o.insertAdjacentHTML("afterend",`<button class="btn v29stop" id="v29Stop" data-v29="stop"></button>`);b=$("v29Stop");}
+  const t=st?"▶️ Terminar la parada":"☕ Parada / Descanso";if(b.textContent!==t)b.textContent=t;b.disabled=dis;b.hidden=dis;b.classList.toggle("on",st);
+  let m=$("v29StopM");if(!m){const mo=$("mOnline");if(mo){mo.insertAdjacentHTML("afterend",`<button class="btn v29stop" id="v29StopM" data-v29="stop" title="Parada / Descanso"></button>`);m=$("v29StopM");}}
+  if(m){const tm=st?"▶️ Seguir":"☕ Parada";if(m.textContent!==tm)m.textContent=tm;m.disabled=dis;m.hidden=dis;m.classList.toggle("on",st);}}
+function v29StSpot(){const c=S.driver||S.settings.center;let b=null,bd=1e9;try{for(const s of V28_SPOTS){const d=hav(c,[s[1],s[2]]);if(d<bd){bd=d;b=s;}}}catch(e){}
+  if(b&&bd<=25)return {n:b[0],d:bd};try{const h=v28Hosp(c);if(h)return {n:h.h[0],d:h.d};}catch(e){}return {n:"el centro de "+(S.settings.place||"la ciudad"),d:null};}
+function v29StPick(){const F=v29R(),n=v29Night();if(F.stKind)return F.stKind;return wpick(Object.keys(V29_KIND).map(k=>[k,V29_KIND[k][n?"noche":"dia"]]));}
+function v29StPerson(kind){const n=v29Night(),g=kind==="ligar"?(Math.random()<.6?"m":"f"):(Math.random()<.55?"m":"f");
+  const edad=kind==="ligar"?rndI(20,52):rndI(18,78),nom=v29rn(g==="m"?NAMES_M:NAMES_F);
+  let act=v29rn(V29_ACT.filter(a=>n||!/achisp/.test(a[0])));if(v29R().stAct)act=V29_ACT.find(a=>a[0].startsWith(v29R().stAct))||act;
+  return {g,edad,nom,asp:v29rn(V29_ASP[g]),act:act[g==="f"?1:0],ins:/insist|achisp/.test(act[0])};}
+function v29Street(){if(!V29on("parada")||!v29StOn())return;const kind=v29StPick(),K=V29_KIND[kind],p=v29StPerson(kind),s=S.v29stop,F=v29R();v29Cd("calle");
+  const who=`${p.g==="m"?"Un hombre":"Una mujer"} de unos ${Math.round(p.edad/5)*5} años`,spot=kind==="dir"?v29StSpot():null;
+  const q=kind==="dir"?`Perdona, ¿para ir a ${spot.n}?`:v29rn(K.q);
+  const opts=kind==="ligar"?[["amable","🙂 Sonreír y decir que no, con amabilidad","ok"],["firme","✋ «Estoy trabajando», firme","mid"],["cerrar","🪟 Cerrar la ventanilla","no"]]
+    :[["dar",K.dar,"ok"],["nodar",kind==="dir"?"🙂 «Lo siento, no lo sé»":"🙂 «No tengo, lo siento»","mid"],["firme","✋ Decir que no, firme","no"],["cerrar","🪟 Cerrar la ventanilla","no"]];
+  const body=`<div class="v26q">«${esc(q)}»</div><div class="sub">${K.ic} ${who} ${esc(K.n)}. <b>Aspecto:</b> ${esc(p.asp)} · <b>actitud:</b> ${esc(p.act)}. <span class="simtag">simulado</span>${spot&&spot.d!=null?` · ${esc(spot.n)} es un sitio real a ${num1(spot.d)} km`:""}</div>`;
+  v29Ask({k:"v29calle",ic:"☕",title:`Alguien se acerca a la ventanilla`,body,opts,snd:"v29calle",voz:`${who} se acerca a la ventanilla y ${K.n}.`,trip:false,
+    on:a=>v29StAns(kind,p,a,spot,who,q,false)});}
+function v29StAns(kind,p,a,spot,who,q,again){if(a==="ign")a="cerrar";const F=v29R(),s=S.v29stop||{},lo=who.toLowerCase();let out;
+  if(!again&&p.ins&&(a==="amable"||a==="nodar")&&(F.stIns!=null?F.stIns:Math.random()<.5)){
+    v29Ask({k:"v29calle",ic:"☕",title:"Insiste un poco",body:`<div class="v26q">«${esc(kind==="ligar"?"Venga, mujer, solo un café… ¿no?":"Venga, porfa, no seas así…")}»</div><div class="sub">Tú tienes la última palabra. <span class="simtag">simulado</span></div>`,
+      opts:kind==="ligar"?[["firme","✋ «He dicho que no», firme","mid"],["cerrar","🪟 Cerrar la ventanilla","no"]]:[["dar",V29_KIND[kind].dar,"ok"],["firme","✋ «He dicho que no», firme","mid"],["cerrar","🪟 Cerrar la ventanilla","no"]],
+      snd:"v29calle",voz:"Insiste un poco.",trip:false,on:b=>v29StAns(kind,p,b,spot,who,q,true)});return;}
+  const f=p.g==="f";
+  if(a==="dar"){out=kind==="dir"?`Le indicas cómo llegar a ${spot.n}. Se va ${f?"agradecida":"agradecido"}.`:kind==="dinero"?`Le das un par de euros (simulado). «¡Gracias, de verdad!»`:`Se lo das. «¡Gracias, guapa!» y se va ${f?"contenta":"contento"}.`;}
+  else if(a==="amable")out=v29rn(["Se ríe y se despide: «¡Otra vez será!».","Te sonríe, «perdona la molestia», y se va.","«Vale, vale, no pasa nada», y sigue su camino."]);
+  else if(a==="nodar")out=`«Vale, gracias igualmente», y se va.`;
+  else if(a==="firme")out=p.ins&&Math.random()<.4?"Refunfuña un poco, pero se va.":"Lo entiende y se va.";
+  else out=v29rn(["Cierras la ventanilla. Se queda un segundo mirando y se va.","Cierras la ventanilla y se aleja."]);
+  toast(`☕ ${out}`);v29say(out);s.n=(s.n||0)+1;(s.log=s.log||[]).push({k:kind,a,ts:Date.now(),g:p.g,edad:p.edad});if(s.log.length>40)s.log.shift();
+  const A={dar:kind==="dir"?"le indiqué el camino":"se lo di",amable:"le dije que no con amabilidad",nodar:"le dije que no tenía",firme:"le dije que no, firme",cerrar:"cerré la ventanilla"}[a];
+  v29Note(`En una parada, ${lo} (${p.asp}, ${p.act}) se acercó a la ventanilla y ${V29_KIND[kind].n}${kind==="dir"?" ("+spot.n+")":""}; ${A}.`);save();}
+function v29StTick(){if(V29off())return;v29StopUI();if(!V29on("parada")||!v29StOn())return;const s=S.v29stop,now=Date.now();
+  if(trip||curReq)return v29StopEnd(trip?"Empieza un viaje: se acaba la parada":"Tienes una oferta: se acaba la parada");
+  if(V26C||V26Q.length)return;if(now<(s.next||0))return;s.next=now+v29StGap();if(!v29CdOk("calle")&&!v29R().st)return;v29Street();}
+setInterval(()=>{try{v29StTick();}catch(e){console.error(e);}},2000);
+
+// ---------- (10) Ambientador: quita olores (no la suciedad) ----------
+const V29_SMELL=/olor|tabaco|vape|humo|tufo|peste/i;
+function v29Amb(){if(!V29on("ambientador"))return;const d=S.v27d;if(!d||!(d.lvl>0))return toast("🌸 El coche ya huele bien");
+  const parts=String(d.why||"").split(" y ").map(x=>x.trim()).filter(Boolean),sm=parts.filter(x=>V29_SMELL.test(x)),rest=parts.filter(x=>!V29_SMELL.test(x));
+  if(!sm.length){toast("🌸 El ambientador no quita la suciedad: usa «🧽 He limpiado el coche»");return;}
+  S.v29amb=(S.v29amb||0)+1;
+  if(rest.length){d.why=rest.join(" y ");save();try{v27DirtyUI();}catch(e){}toast(`🌸 Ya no hay ${sm.join(" ni ")}. Pero sigue ${rest.join(" y ")}: usa «🧽 He limpiado el coche»`);}
+  else{S.v27d={lvl:0,why:"",at:Date.now(),n:d.n||0,last:d.why,amb:true};save();try{v27DirtyUI();}catch(e){}toast(`🌸 Ambientador: adiós al ${sm.join(" y al ")}. Huele a limpio.`);}
+  try{playSound("v29amb");}catch(e){}v29say("Ambientador puesto.","v29amb");v29Note(`He usado el ambientador para quitar ${sm.join(" y ")}.`);}
+{const _du=v27DirtyUI;v27DirtyUI=function(){const v=_du.apply(this,arguments);try{const c=$("v27Clean");if(c&&V29on("ambientador")&&!$("v29Amb"))c.insertAdjacentHTML("afterend",`<button class="btn v29amb" id="v29Amb" data-v29="amb">🌸 Ambientador</button>`);}catch(e){}return v;};}
+
+// ---------- (5) Kilómetros en ETS2 (escala 1:19 por defecto) ----------
+const v29Num=x=>x<100?num1(x):String(Math.round(x));
+function v29EtsTxt(km,min){const k=+v29S().escala||19,x=(+km||0)/k,t=(+min||0)/k;return `🚚 En ETS2: ~${v29Num(x)} km`+(min?(t<1?" · menos de 1 min al volante":` · ~${Math.round(t)} min al volante`):"");}
+function v29EtsApply(){if(!V29on("ets2"))return;const ov=$("overlay");if(!ov)return;const c=ov.querySelector(".req,.trip");if(!c||c.classList.contains("tsum")||c.querySelector(".v29ets"))return;
+  const r=c.classList.contains("trip")?(trip&&trip.r):curReq;if(!r||!(r.km>0))return;const k=+v29S().escala||19;
+  const h=`<div class="sub v29ets" title="Escala de ETS2 1:${k} (se cambia en Ajustes)">${v29EtsTxt(r.km,r.min)}${r.pickupDist/k>=.05?` · recogida ~${v29Num(r.pickupDist/k)} km`:""} <span class="simtag">estimado</span></div>`;
+  const s=[...c.querySelectorAll(".sub")].find(e=>/\d km/.test(e.textContent));if(s)s.insertAdjacentHTML("afterend",h);else{const p=c.querySelector(".price");if(p)p.insertAdjacentHTML("afterend",h);else c.insertAdjacentHTML("afterbegin",h);}}
+if(!window.NO_V29)new MutationObserver(()=>{try{v29EtsApply();}catch(e){}}).observe($("overlay"),{childList:true,subtree:true});
+
+// ---------- (9) Pago con tarjeta fallido (muy raro, simulado) ----------
+function v29Upd(e){try{HS.upd(e.uid,v=>{v.v29=e.v29;v.net=e.net;}).catch(()=>{});}catch(x){}save();}
+function v29Loss(e){const nw=-r2((e.energy||0)+(e.ferry||0)),d=r2(nw-(e.net||0));e.net=nw;S.stats.net=r2((S.stats.net||0)+d);S.stats.earn=r2((S.stats.earn||0)-(e.gross||0));e.v29.pay.loss=r2(-d);}
+function v29Pay(e,r){if(!V29on("pago")||e.status!=="ok"||r.svc==="paquete"||!(e.gross>0))return false;const F=v29R();if(!F.pay&&(!v29CdOk("pago")||Math.random()>=(F.payP!=null?F.payP:.03)))return false;v29Cd("pago");
+  e.v29=e.v29||{};e.v29.pay={st:"fallo",amt:e.gross};v29Upd(e);const nm=String(e.pax||"el cliente").split(",")[0];
+  setTimeout(()=>v29Ask({k:"v29pago",ic:"💳",title:"Pago con tarjeta rechazado",body:`<div class="sub">El cobro de <b>${eur(e.gross)}</b> a ${esc(nm)} no ha pasado. <span class="simtag">simulado</span></div><div class="sub">¿Qué haces?</div>`,
+    opts:[["otro","💶 Pedir otra forma: efectivo o Bizum","ok"],["reclamar","📨 Dejarlo y reclamar a la plataforma","mid"],["perdonar","🤝 Perdonarlo","no"]],snd:"v29pago",
+    voz:"El pago con tarjeta ha fallado. ¿Pides otra forma de pago, lo reclamas o lo perdonas?",trip:false,on:a=>v29PayAns(e.uid,a,nm)}),F.payDelay!=null?F.payDelay*1000:1500);return true;}
+function v29PayAns(uid,a,nm){const e=S.history.find(x=>x.uid===uid);if(!e||!e.v29||!e.v29.pay)return;const P=e.v29.pay,F=v29R();if(a==="ign")a="reclamar";P.a=a;
+  if(a==="otro"){const ok=F.payOtro!=null?F.payOtro==="si":Math.random()<.85;if(ok){P.st="cobrado";P.how=Math.random()<.55?"Bizum":"efectivo";toast(`💶 ${nm} te paga por ${P.how} (simulado)`);v29say(`${nm} te paga por ${P.how}.`);
+      v29Note(`A ${nm} le falló la tarjeta; me pagó por ${P.how}.`);return v29Upd(e);}
+    toast(`💳 ${nm} no tiene otra forma de pago: lo reclamas a la plataforma`);a=P.a="reclamar";}
+  if(a==="reclamar"){P.st="reclamado";P.res=Date.now()+(F.payRes!=null?F.payRes*1000:rnd(3,8)*60e3);toast("📨 Reclamado a la plataforma: te dirá algo en unos minutos (simulado)");
+    v29Note(`A ${nm} le falló la tarjeta; lo he reclamado a la plataforma.`);return v29Upd(e);}
+  P.st="perdonado";v29Loss(e);P.rev="Me falló la tarjeta y me lo perdonó. ¡Un encanto de conductora!";toast(`🤝 Se lo perdonas a ${nm}: «¡Muchísimas gracias!»`);v29say("Se lo perdonas. Te lo agradece mucho.");
+  v29Note(`A ${nm} le falló la tarjeta y le perdoné el viaje (${eur(P.amt)}).`);v29Upd(e);try{renderStats();}catch(x){}}
+function v29PayTick(){if(V29off())return;const now=Date.now(),F=v29R();for(const e of (S.history||[]).slice(0,80)){const P=e.v29&&e.v29.pay;if(!P||P.st!=="reclamado"||now<P.res)continue;
+  const ok=F.payPlat!=null?F.payPlat==="si":Math.random()<.7;if(ok){P.st="pagado";v29alert("v29pago","📨 La plataforma te ha pagado",`${eur(P.amt)} del viaje con la tarjeta rechazada (simulado)`,"📨","La plataforma te ha pagado el viaje.");v29Note(`La plataforma me pagó el viaje de la tarjeta rechazada (${eur(P.amt)}).`);}
+  else{P.st="perdido";v29Loss(e);v29alert("v29pago","📨 Reclamación rechazada",`La plataforma no paga ese viaje: pierdes ${eur(P.amt)} (simulado)`,"📨","La plataforma no te paga ese viaje.");v29Note(`La plataforma no me pagó el viaje de la tarjeta rechazada (${eur(P.amt)}).`);try{renderStats();}catch(x){}}
+  v29Upd(e);}}
+setInterval(()=>{try{v29PayTick();}catch(e){console.error(e);}},5000);
+
+// ---------- (6) Más datos reales (nombres, apellidos por región, profesiones, temas, ciudades y pueblos) ----------
+const V29_NM={m:[["Abelardo",72],["Adolfo",66],["Alfonso",58],["Amador",74],["Anastasio",76],["Arturo",50],["Aurelio",72],["Basilio",76],["Benjamín",30],["Bonifacio",78],["Celestino",76],["Clemente",70],["Conrado",64],["Cristóbal",52],["Domingo",66],["Eduardo",48],["Eladio",76],["Eugenio",66],["Eusebio",76],["Evaristo",76],["Faustino",76],["Federico",60],["Fidel",68],["Gaspar",58],["Gonzalo",40],["Hugo",12],["Ignacio",44],["Inocencio",78],["Jenaro",76],["Jesús",54],["Leonardo",30],["Lisardo",70],["Marcos",34],["Mariano",66],["Maximino",76],["Nazario",76],["Norberto",64],["Pascual",70],["Patricio",62],["Pelayo",30],["Quintín",72],["Rafael",52],["Raimundo",72],["Reinaldo",60],["Sebastián",40],["Segundo",78],["Silvestre",74],["Tadeo",20],["Telmo",22],["Teófilo",76],["Ulises",30],["Urbano",76],["Valeriano",76],["Víctor",42],["Wenceslao",76],["Zacarías",74],["Álex",22],["Adam",10],["Liam",8],["Marco",14],["Nil",14],["Oliver",8],["Pablo",28],["Rodrigo",28],["Santiago",22],["Martín",14],["Dylan",14],["Enzo",8]],
+  f:[["Adela",70],["Adoración",74],["Agustina",76],["Alicia",48],["Ángela",50],["Antonia",66],["Araceli",58],["Aurora",64],["Begoña",54],["Blanca",44],["Candela",14],["Carmen",62],["Catalina",64],["Cecilia",54],["Clara",24],["Concepción",74],["Daniela",18],["Débora",36],["Delia",62],["Diana",36],["Elisa",42],["Elvira",64],["Emilia",60],["Enriqueta",76],["Eva",42],["Fátima",36],["Felisa",76],["Fernanda",56],["Filomena",78],["Genoveva",76],["Herminia",76],["Inés",30],["Inmaculada",56],["Irene",28],["Josefina",72],["Laia",14],["Leire",20],["Leonor",30],["Lidia",40],["Lourdes",54],["Lucía",20],["Luisa",62],["Marina",30],["Marta",38],["Martina",12],["Matilde",74],["Nerea",26],["Nieves",62],["Nuria",44],["Olga",50],["Patricia",42],["Paula",22],["Petra",76],["Rebeca",34],["Rocío",36],["Sara",28],["Silvia",42],["Sofía",14],["Susana",48],["Teresa",60],["Valeria",12],["Verónica",42],["Victoria",36],["Virginia",44],["Yolanda",50],["Abril",8],["Alba",22],["Ariadna",20],["Claudia",22],["Naia",10]]};
+const V29_REG={cat:{m:[["Ferran",34],["Quim",48],["Xavier",46],["Roger",28],["Biel",12],["Jan",10],["Martí",14],["Eloi",22],["Ricard",50]],f:[["Montserrat",58],["Núria",44],["Mireia",36],["Laia",16],["Meritxell",38],["Carme",64],["Anna",36],["Neus",48],["Júlia",16]],
+    a:["Puig","Font","Pujol","Riera","Roca","Serra","Bosch","Sala","Mas","Coll","Prat","Camps","Vives","Batlle","Casals","Ribas","Oliveras","Pons","Torrent","Badia","Rovira","Comas","Valls","Ferrer","Sabaté"]},
+  eus:{m:[["Mikel",34],["Gorka",36],["Iñaki",50],["Xabier",42],["Ander",20],["Julen",18],["Koldo",54],["Patxi",62],["Imanol",38]],f:[["Ane",16],["Maite",50],["Nerea",28],["Itziar",42],["Amaia",30],["Leire",22],["Garazi",24],["Arantxa",50],["Edurne",48]],
+    a:["Etxebarria","Goikoetxea","Uriarte","Zubizarreta","Arrieta","Bilbao","Larrañaga","Urrutia","Elorza","Ibarra","Mendizabal","Olaizola","Zabala","Aramburu","Ugarte","Lizarraga","Iturbe","Arana","Gorostiza","Elizondo"]},
+  gal:{m:[["Xosé",56],["Xurxo",44],["Breixo",14],["Uxío",18],["Roi",20],["Anxo",36],["Xabier",30],["Manuel",60]],f:[["Uxía",18],["Iria",20],["Antía",18],["Noa",14],["Sabela",20],["Xiana",22],["Carme",60],["Maruxa",76]],
+    a:["Fernández","Rodríguez","Pereira","Fraga","Lorenzo","Sanmartín","Rivas","Otero","Lema","Seoane","Mosquera","Regueiro","Souto","Barreiro","Couto","Vilariño","Porto","Rey","Figueiras","Outeiro"]},
+  can:{m:[["Ayoze",18],["Tanausú",22],["Jonay",24],["Aday",20],["Adexe",26],["Acaymo",28],["Beneharo",30],["Iballa",0]],f:[["Guacimara",28],["Chaxiraxi",24],["Tamara",34],["Nayra",24],["Idaira",26],["Yaiza",22],["Dácil",26],["Tenesoya",22]],
+    a:["Hernández","Rodríguez","Santana","Cabrera","Alemán","Quintana","Ojeda","Afonso","Expósito","Melián","Trujillo","Bethencourt","Betancor","Morales","Hormiga","Ramallo","Rivero","Reyes"]}};
+const V29_AP=["Albarrán","Alcántara","Aranda","Ávila","Báez","Becerra","Bravo","Bustos","Cáceres","Calvo","Camacho","Cobo","Cordero","Coronado","Crespo","Cuenca","Dávila","Durán","Escudero","Esteve","Figueroa","Fuentes","Gálvez","Gil","Godoy","Gracia","Heredia","Huertas","Jurado","Lara","León","Linares","Llorente","Lucas","Macías","Mejía","Millán","Mota","Navas","Nieto","Olmo","Ortuño","Pacheco","Palacios","Pardo","Plaza","Quesada","Quirós","Rojas","Roldán","Rosales","Salgado","Salinas","Sanz","Segura","Serrano","Solís","Sosa","Tapia","Toledo","Valero","Vallejo","Villalba","Zamora","Zapata"];
+const V29_PROFS=[["Controlador aéreo","Controladora aérea",26,60,.05,""],["Guardia civil","Guardia civil",20,62,.6,"p"],["Policía local","Policía local",21,62,.6,"p"],["Bombero","Bombera",22,62,.3,"p"],["Técnico de rayos","Técnica de rayos",22,64,.3,""],["Fisioterapeuta","Fisioterapeuta",22,64,.6,""],["Logopeda","Logopeda",22,64,.2,""],["Podólogo","Podóloga",22,66,.2,""],["Óptico","Óptica",22,66,.3,""],["Farmacéutico","Farmacéutica",24,68,.6,""],["Veterinario","Veterinaria",24,66,.4,""],["Arquitecto técnico","Arquitecta técnica",24,66,.3,""],["Topógrafo","Topógrafa",22,64,.1,"p"],["Delineante","Delineante",20,64,.2,""],["Gruista","Gruista",22,62,.2,"p"],["Ferrallista","Ferrallista",20,60,.2,"p"],["Escayolista","Escayolista",20,62,.1,"p"],["Cristalero","Cristalera",20,64,.1,"p"],["Jardinero","Jardinera",18,66,.4,"p"],["Socorrista","Socorrista",18,40,.1,"p"],["Monitor de tiempo libre","Monitora de tiempo libre",18,40,.3,""],["Educador social","Educadora social",22,64,.3,""],["Trabajador social","Trabajadora social",22,64,.3,""],["Bibliotecario","Bibliotecaria",24,66,.2,""],["Traductor","Traductora",22,66,.2,""],["Guía turístico","Guía turística",20,66,.2,""],["Sumiller","Sumiller",22,62,.05,""],["Repartidor de paquetería","Repartidora de paquetería",18,60,.5,"p"],["Conductor de autobús","Conductora de autobús",23,64,.4,"p"],["Maquinista de tren","Maquinista de tren",25,62,.1,"p"],["Azafato de vuelo","Azafata de vuelo",20,58,.2,""],["Opositor","Opositora",22,40,.4,""],["Tatuador","Tatuadora",20,55,.1,""],["Barbero","Barbera",18,64,.3,"p"]];
+const V29_TOWNS=["Laguardia|Álava","Hondarribia|Gipuzkoa","Zumaia|Gipuzkoa","Lekeitio|Bizkaia","Bermeo|Bizkaia","Cangas de Onís|Asturias","Llanes|Asturias","Cudillero|Asturias","Potes|Cantabria","Santillana del Mar|Cantabria","Comillas|Cantabria","Laredo|Cantabria","Betanzos|A Coruña","Muros|A Coruña","Allariz|Ourense","Ribadavia|Ourense","Cambados|Pontevedra","Baiona|Pontevedra","Mondoñedo|Lugo","Viveiro|Lugo","Astorga|León","La Bañeza|León","Sahagún|León","Benavente|Zamora","Toro|Zamora","Medina del Campo|Valladolid","Tordesillas|Valladolid","Peñafiel|Valladolid","Sepúlveda|Segovia","Cuéllar|Segovia","Ciudad Rodrigo|Salamanca","Béjar|Salamanca","Arévalo|Ávila","El Burgo de Osma|Soria","Almazán|Soria","Lerma|Burgos","Briviesca|Burgos","Haro|La Rioja","Calahorra|La Rioja","Ezcaray|La Rioja","Olite|Navarra","Estella-Lizarra|Navarra","Jaca|Huesca","Barbastro|Huesca","Monzón|Huesca","Alcañiz|Teruel","Albarracín|Teruel","Caspe|Zaragoza","Tarazona|Zaragoza","Ejea de los Caballeros|Zaragoza","Puigcerdà|Girona","Olot|Girona","Figueres|Girona","Banyoles|Girona","Vic|Barcelona","Manresa|Barcelona","Igualada|Barcelona","Vilafranca del Penedès|Barcelona","Tàrrega|Lleida","La Seu d'Urgell|Lleida","Tortosa|Tarragona","Valls|Tarragona","Morella|Castellón","Vinaròs|Castellón","Segorbe|Castellón","Requena|Valencia","Xàtiva|Valencia","Ontinyent|Valencia","Villena|Alicante","Altea|Alicante","Jumilla|Murcia","Caravaca de la Cruz|Murcia","Cieza|Murcia","Sigüenza|Guadalajara","Molina de Aragón|Guadalajara","Almagro|Ciudad Real","Valdepeñas|Ciudad Real","Consuegra|Toledo","Oropesa|Toledo","Belmonte|Cuenca","Tarancón|Cuenca","Almansa|Albacete","Hellín|Albacete","Trujillo|Cáceres","Guadalupe|Cáceres","Jerez de los Caballeros|Badajoz","Llerena|Badajoz","Aracena|Huelva","Ayamonte|Huelva","Arcos de la Frontera|Cádiz","Vejer de la Frontera|Cádiz","Baeza|Jaén","Cazorla|Jaén","Priego de Córdoba|Córdoba","Lucena|Córdoba","Guadix|Granada","Loja|Granada","Mojácar|Almería","Vélez-Rubio|Almería","Chinchón|Madrid","Aranjuez|Madrid","San Lorenzo de El Escorial|Madrid","Buitrago del Lozoya|Madrid"];
+const V29_TOP=[["la vendimia",3],["el aceite de este año",3],["las fiestas del barrio",4],["los conciertos del verano",4],["el carnaval",3],["los Sanfermines",2],["las Fallas",3],["la Feria de Abril",3],["el pádel",4],["el gimnasio",4],["recetas de cocina",4],["el huerto",3],["la ITV del coche",3],["la hipoteca",3],["el último libro que han leído",3],["un viaje a Portugal",3],["la nieve en la sierra",2],["el surf",2],["los mercadillos",3],["la tele de anoche",4]];
+const V29_INT=[["Contigo da gusto que el viaje sea largo…"],["¿Siempre eres así de simpática o solo conmigo?"],["Me estás alegrando el día, que lo sepas."],["Si te digo que he pedido el viaje por si me tocabas tú, ¿te ríes?"],["Con esa voz podrías leerme el GPS toda la noche."],["Me pones nervioso… en el buen sentido."],["Qué pena que se acabe el trayecto, ¿no das una vuelta más?"]];
+const V29_CIT=[["Ponferrada",42.5466,-6.5962],["Talavera de la Reina",39.9635,-4.8308],["Linares",38.0951,-3.6361],["Lorca",37.6772,-1.7006],["Ferrol",43.4840,-8.2330],["Torrelavega",43.3494,-4.0479],["Reus",41.1561,1.1069],["Sabadell",41.5433,2.1094],["Terrassa",41.5610,2.0089],["Mataró",41.5381,2.4447],["Gandia",38.9680,-0.1815],["Alcoi",38.6984,-0.4736],["Elda",38.4776,-0.7917],["Torrevieja",37.9787,-0.6822],["Dénia",38.8408,0.1057],["Ronda",36.7423,-5.1671],["Motril",36.7457,-3.5178],["El Ejido",36.7764,-2.8146],["Antequera",37.0194,-4.5612],["Úbeda",38.0133,-3.3705],["Aranda de Duero",41.6704,-3.6892],["Miranda de Ebro",42.6866,-2.9470],["Tudela",42.0617,-1.6045],["Calatayud",41.3536,-1.6430],["Plasencia",40.0303,-6.0903],["Getxo",43.3569,-3.0116],["Irun",43.3390,-1.7896],["Avilés",43.5547,-5.9248],["Puertollano",38.6871,-4.1073],["Sanlúcar de Barrameda",36.7781,-6.3515]];
+const V29_DATA={nm:0,ap:0,reg:0,prof:0,towns:0,top:0,int:0,cit:0};
+if(!window.NO_V29&&!V29off()&&v29S().datos){try{
+  for(const g of ["m","f"])for(const [n,ed] of V29_NM[g]){const NL=g==="m"?NAMES_M:NAMES_F;if(NL.includes(n)||INE_NOM[g].some(x=>x[0]===n))continue;NL.push(n);INE_NOM[g].push([n,9000,ed]);V29_DATA.nm++;}
+  for(const a of V29_AP)if(!INE_NOM.a.some(x=>x[0]===a)){INE_NOM.a.push([a,9000]);V29_DATA.ap++;}
+  for(const r in V29_REG){const R=INE_NOM.reg[r];if(!R)continue;const med=k=>{const L=R[k].map(x=>x[1]).sort((a,b)=>a-b);return L[Math.floor(L.length/2)]||1000;};
+    for(const g of ["m","f"]){const w=med(g);for(const [n,ed] of V29_REG[r][g]){if(!ed||R[g].some(x=>x[0]===n))continue;R[g].push([n,w,ed]);const NL=g==="m"?NAMES_M:NAMES_F;if(!NL.includes(n))NL.push(n);V29_DATA.reg++;}}
+    const wa=med("a");for(const a of V29_REG[r].a)if(!R.a.some(x=>x[0]===a)){R.a.push([a,wa]);V29_DATA.reg++;}}
+  for(const p of V29_PROFS)if(!PROFS.some(x=>x[0]===p[0])){PROFS.push(p);V29_DATA.prof++;}
+  for(const t of V29_TOWNS)if(!TOWNS.includes(t)){TOWNS.push(t);V29_DATA.towns++;}
+  for(const t of V29_TOP)if(!TOPICS.some(x=>x[0]===t[0])){TOPICS.push(t);V29_DATA.top++;}
+  for(const q of V29_INT)if(!INT_Q.some(x=>x[0]===q[0])){INT_Q.push(q);V29_DATA.int++;}
+  for(const [n,la,lo] of V29_CIT)if(!CITIES.some(c=>c.n===n)){CITIES.push({n,c:[la,lo],g:"p"});V29_DATA.cit++;}}catch(e){console.error(e);}}
+
+// ---------- (8) Número o cita: el cliente lo pide al final ----------
+function v29RegEnsure(per,r){if(!per)return null;const L=regsS(),nm=per.name||per.nom;let g=(per.regId&&regGet(per.regId))||L.find(x=>x.kind==="pax"&&x.per&&(x.per.name||x.per.nom)===nm&&x.per.edad===per.edad);
+  if(!g){const c=JSON.parse(JSON.stringify(per));delete c.regId;delete c.regTemp;const now=Date.now();
+    g={id:"g"+now.toString(36)+rndI(100,999),kind:"pax",per:c,n:1,sum:0,rn:0,bad:0,first:now,city:S.settings.place||"",pt:((r&&r.pickup)||S.driver||S.settings.center).slice(),last:{ts:now,rate:null,status:"ok",from:(r&&r.from)||"",to:(r&&r.to)||"",svc:(r&&r.svc)||"urbano"}};L.unshift(g);}
+  g.v29=g.v29||{};return g;}
+function v29NumAsk(e,r,V){if(!V29on("numero")||e.status!=="ok"||r.svc==="paquete"||!r.per||(+r.per.edad||0)<18||(r.comps||[]).some(c=>(+c.edad||30)<18)||V.v29pide)return false;
+  const rep=!!V.v29rep,F=v29R();if(!F.numAsk&&!(((V.intMax||0)>=7||rep)&&v29CdOk("numero")&&Math.random()<(rep?.55:.4)))return false;v29Cd("numero");
+  const nm=String(r.name||"").split(" ")[0],cita=F.numK?F.numK==="cita":Math.random()<.4;
+  const q=cita?v29rn(["Oye… ¿y si un día quedamos para un café, sin coche de por medio?","Me lo he pasado genial. ¿Quedamos algún día?"]):v29rn(["¿Me das tu número? Así te escribo y no dependo de la app.","Antes de irme… ¿me das tu número?"]);
+  setTimeout(()=>v29Ask({k:"v29num",ic:"📱",title:`${nm} te pide ${cita?"quedar":"tu número"}`,body:`<div class="v26q">«${esc(q)}»</div><div class="sub">Al bajarse del coche. Tú decides. <span class="simtag">simulado</span></div>`,
+    opts:[["dar",cita?"☕ «Vale, quedamos»":"📱 Darle tu número","ok"],["amable","🙂 Decir que no, con amabilidad","mid"],["cortar","✋ Cortar: «No mezclo trabajo y vida privada»","no"]],
+    snd:"v29num",voz:`${nm} te pide ${cita?"quedar un día":"tu número"}.`,trip:false,on:a=>v29NumAns(e.uid,r,a,cita,nm)}),F.numDelay!=null?F.numDelay*1000:2500);return true;}
+function v29NumAns(uid,r,a,cita,nm){if(a==="ign")a="amable";const e=S.history.find(x=>x.uid===uid);if(e){e.v29=e.v29||{};e.v29.num={k:cita?"cita":"num",a,by:"cliente"};v29Upd(e);}
+  if(a==="dar"){const g=v29RegEnsure(r.per,r);if(g){g.v29[cita?"cita":"num"]=Date.now();delete g.v29.cut;}toast(`📱 ${cita?"Quedas con":"Le das tu número a"} ${nm}: «¡Genial! Te escribo» · pedirá viajes más a menudo (simulado)`);v29say(`${nm} se va ${r.per.g==="f"?"encantada":"encantado"}.`);
+    v29Note(`${nm} me pidió ${cita?"quedar":"el número"} al acabar el viaje y ${cita?"le dije que sí":"se lo di"}.`);}
+  else if(a==="amable"){toast(`🙂 «Vale, no pasa nada. ¡Gracias por el viaje!»`);v29Note(`${nm} me pidió ${cita?"quedar":"el número"}; le dije que no, con amabilidad.`);}
+  else{const g=regsS().find(x=>x.per&&(x.per.name||x.per.nom)===(r.per.name||r.per.nom)&&x.per.edad===r.per.edad);if(g){g.v29=g.v29||{};g.v29.cut=Date.now();delete g.v29.num;delete g.v29.cita;}
+    toast("✋ Lo dejas claro. Se va algo cortado.");v29Note(`${nm} me pidió ${cita?"quedar":"el número"} y lo corté: no mezclo trabajo y vida privada.`);}
+  save();try{regUI();}catch(x){}}
+
+// ---------- Al acabar cada viaje ----------
+function v29After(T0,r,V,e){const v={};if(V.v29rep)v.rep=V.v29rep;if(V.escN)v.esc=V.escN;if(V.v29ch)v.ch=V.v29ch.slice(0,5);if(V.v29pide)v.pide=V.v29pide;if(V.intMax!=null&&(V.escN||V.v29rep))v.intMax=V.intMax;
+  if(Object.keys(v).length)e.v29=Object.assign(e.v29||{},v);
+  if(V.v29pide&&V.v29pide.out==="si"&&r.per){const g=v29RegEnsure(r.per,r);if(g){g.v29[V.v29pide.k==="cita"?"cita":"num"]=Date.now();delete g.v29.cut;}
+    v29Note(`Le ${V.v29pide.k==="cita"?"propuse quedar":"pedí el número"} a ${V.v29pide.nm} y me dijo que sí.`);}
+  else if(V.v29pide)v29Note(`Le ${V.v29pide.k==="cita"?"propuse quedar":"pedí el número"} a ${V.v29pide.nm}; me dijo que no, con educación.`);
+  if(V.v29rep)v29Note(`${V.v29rep.nm}, cliente habitual (${V.v29rep.n} viajes), volvió a buscar conversación intensa y a tontear conmigo.`);
+  if(e.v29)v29Upd(e);if(!v29Pay(e,r))v29NumAsk(e,r,V);try{regUI();}catch(x){}}
+{const _ft=finishTrip;finishTrip=function(){const T0=trip,r0=trip&&trip.r,V=trip&&trip.v28,u0=S.history[0]&&S.history[0].uid;const out=_ft.apply(this,arguments);
+  try{const e=S.history[0];if(T0&&!V29off()&&e&&e.uid!==u0)v29After(T0,r0,V||{},e);}catch(x){console.error(x);}return out;};}
+// Viaje bloqueado desde el historial
+function v29BlockHist(e){if(!e)return;const per=e.per||{name:String(e.pax||"").split(",")[0]};v29Block(per,e.svc==="paquete"?"pq":"pax");try{hmRender();}catch(x){}}
+const v29Tags=x=>{const v=x.v29,t=[];if(!v)return t;if(v.rep)t.push(`🔁 habitual (${v.rep.n})`);if(v.esc)t.push("🌡️ conversación intensa");if(v.pide)t.push(`📱 pediste ${v.pide.k==="cita"?"cita":"número"}: ${v.pide.out}`);
+  if(v.num)t.push(`📱 te pidió ${v.num.k==="cita"?"cita":"número"}: ${({dar:"sí",amable:"no",cortar:"cortado"})[v.num.a]||v.num.a}`);
+  if(v.pay)t.push(`💳 tarjeta rechazada: ${({fallo:"pendiente",cobrado:"cobrado por "+(v.pay.how||"otra vía"),reclamado:"reclamado",pagado:"pagado por la plataforma",perdido:"perdido",perdonado:"perdonado"})[v.pay.st]||v.pay.st}`);return t;};
+{const _hm=hmRender;hmRender=function(){const v=_hm.apply(this,arguments);try{if(V29off())return v;const rows=HM.f.slice(HM.page*HM.per,(HM.page+1)*HM.per),tr=$("hmBody").querySelectorAll("tr");
+  rows.forEach((x,i)=>{const td=tr[i]&&tr[i].lastElementChild;if(!td||td.querySelector(".v29h"))return;const t=v29Tags(x),gi=HM.page*HM.per+i,per=x.per||{name:String(x.pax||"").split(",")[0]};
+    const blk=V29on("bloquear")?(v29IsBlk(per)?`<span class="v29tg">🚫 bloqueado</span>`:`<button class="btn-xs v29blk" data-v29="blkhist" data-i="${gi}">🚫 Bloquear</button>`):"";
+    td.insertAdjacentHTML("beforeend",`<div class="v29h">${t.length?`<span class="v29tg">${esc(t.join(" · "))}</span> `:""}${blk}</div>`);});}catch(e){console.error(e);}return v;};}
+{const _vd=v26Diary;v26Diary=function(sh,rec){const d=_vd.apply(this,arguments);if(!d||V29off())return d;try{const s=[],N=(S.v29notes||[]).filter(n=>n.sh===sh.id);
+  if(N.length<=12)N.forEach(n=>s.push(n.t));else{const k=N.length-12;N.slice(0,4).forEach(n=>s.push(n.t));s.push(`…y ${k} cosa${k===1?"":"s"} más en la jornada…`);N.slice(-8).forEach(n=>s.push(n.t));}
+  const L=S.history.filter(e=>e.shift===sh.id&&e.v29&&e.v29.esc&&!e.v29.rep);if(L.length)s.push(`${L.length} conversación${L.length===1?"":"es"} intensa${L.length===1?"":"s"} siguió${L.length===1?"":"eron"} así hasta que yo cambié el rumbo (nada explícito).`);
+  d.lines.push(...s);d.st.v29=N.length;}catch(e){console.error(e);}return d;};}
+{const _cs=csvOf;csvOf=function(list){const s=_cs.apply(this,arguments);if(V29off())return s;const rows=s.split("\r\n");if(rows.length!==list.length+1)return s;
+  const q=t=>{t=String(t==null?"":t);return /[";\r\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t;};rows[0]+=";v29: habitual, número/cita, pago (simulado)";
+  list.forEach((x,i)=>{rows[i+1]+=";"+q(v29Tags(x).join(" | "));});return rows.join("\r\n");};}
+
+// ---------- Ajustes v29 ----------
+{const a=$("secV28")||$("secV27")||$("secV26")||$("secEv");if(a&&!$("secV29")&&!V29off()){v29S();a.insertAdjacentHTML("afterend",`<div class="sec" id="secV29"><h2>Versión 29 <span class="v29ver" id="v29VerS">v${APP_VER}</span> <span class="simtag">simulado</span></h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 10px;margin-top:6px">${Object.keys(V29_DEF).map(k=>`<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-v29k="${k}"> ${V29_LBL[k]}</label>`).join("")}</div>
+  <label style="display:flex;gap:6px;align-items:center;margin-top:6px">🚚 Escala de ETS2 1:<input type="number" id="v29Esc" min="1" max="100" step="1" style="width:70px"></label>
+  <div class="hint">En ETS2 los km del juego van a escala (por defecto 1:19). El cálculo es aproximado.</div>
+  <h2 style="margin-top:10px">🚫 Clientes bloqueados</h2><div id="v29BlkList"></div>
+  <div class="hint">Las personas de la calle, los números, las citas y los pagos fallidos son <b>simulados</b>; los lugares son <b>reales</b>. Cada cosa tiene su tiempo de espera. Todo se guarda en exportar/importar.</div></div>`);
+  document.querySelectorAll("#secV29 input[data-v29k]").forEach(c=>c.onchange=()=>{v29S()[c.dataset.v29k]=c.checked;save();toast(V29_LBL[c.dataset.v29k]+": "+(c.checked?"activado":"desactivado"));
+    try{v29StopUI();v27DirtyUI();drawZone(false);v29BigCheck();}catch(e){}});
+  $("v29Esc").onchange=()=>{const v=Math.round(+$("v29Esc").value);if(v>=1&&v<=100){v29S().escala=v;save();toast(`🚚 Escala de ETS2: 1:${v}`);}else $("v29Esc").value=v29S().escala;};}}
+function syncV29UI(){if(!$("secV29"))return;const s=v29S();document.querySelectorAll("#secV29 input[data-v29k]").forEach(c=>c.checked=!!s[c.dataset.v29k]);$("v29Esc").value=s.escala;v29BlkUI();}
+{const _se=syncEvUI;syncEvUI=function(){const v=_se.apply(this,arguments);try{syncV29UI();v29StopUI();}catch(e){}return v;};}
+if(!V29off()){syncV29UI();try{v29StopUI();v27DirtyUI();regUI();}catch(e){}
+  document.head.insertAdjacentHTML("beforeend",`<style>
+.v29stop{margin-top:6px;background:#2a313b;color:var(--txt)}.v29stop.on{background:#8a5a00;color:#fff}#mBar .v29stop{margin:0;padding:6px 10px;font-size:13px;width:auto;min-width:0;flex:0 0 auto}#mBar .v29stop~*{}#mBar:has(.v29stop:not([hidden])) #mOnline{min-width:118px}
+.v29amb{margin-top:6px;background:#3b2a3f;color:#fff}.v29b{margin-top:6px;background:#23415e;color:#fff}.v29blk{margin-top:4px}
+.v29tg{font-size:11px;color:#9fb3c8}.v29ets{color:#8fd3ff}.v29h{margin-top:3px}
+</style>`);}
+window.V29={S:v29S,on:V29on,R:v29R,DEF:V29_DEF,M:V29M,big:v29BigCheck,shrink:v29Shrink,tick:v29Tick,rep:()=>trip&&trip.v28&&v29RepStart(trip.v28),pide:v29Pide,pideProb:v29PideProb,
+  block:v29Block,blk:v29Blk,isBlk:v29IsBlk,unblock:v29Unblock,stop:v29StopToggle,stOn:v29StOn,street:v29Street,stTick:v29StTick,amb:v29Amb,ets:v29EtsTxt,etsApply:v29EtsApply,
+  pay:v29Pay,payAns:v29PayAns,payTick:v29PayTick,numAsk:v29NumAsk,regEnsure:v29RegEnsure,notes:()=>S.v29notes||[],data:V29_DATA,tags:v29Tags,ver:APP_VER};
 
 </script>
 </body>
