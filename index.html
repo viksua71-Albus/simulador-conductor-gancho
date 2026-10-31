@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#161b22">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Simulador Conductor · Versión Gancho</title>
+<title>Simulador de Conductor · España</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script>/* 29.1: en móvil, Leaflet sin capas 3D: cada tesela era una capa GPU y agotaba la memoria de la tarjeta inferior (Android) */
+try{window.V291_MOB=!window.NO_V291&&matchMedia("(max-width:899px),(max-height:520px) and (pointer:coarse)").matches;if(window.V291_MOB)window.L_DISABLE_3D=true;}catch(e){window.V291_MOB=false;}</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root{--bg:#0e1116;--panel:#161b22;--card:#1f2630;--line:#2b3440;--txt:#e8edf3;--mut:#8b97a7;--acc:#21d07a;--acc2:#3aa0ff;--warn:#ffb020;--bad:#ff5a5f;}
@@ -297,7 +299,7 @@ body.fxlite #overlay .req,body.fxlite #overlay .trip,body.fxlite #startBox,body.
   <div id="map" style="position:relative"></div>
   <aside id="panel">
     <header>
-      <h1>🚗 Simulador <span>Conductor</span> · Gancho</h1>
+      <h1>🚗 Simulador <span>Conductor</span> España</h1>
       <div class="sim-badge">⚠️ SIMULACIÓN · pasajeros, viajes y tarifas ficticios</div>
     </header>
     <div id="scroll">
@@ -970,7 +972,7 @@ function toast(t){const e=$("toast");e.textContent=t;e.style.display="block";cle
 function groupOf(c){let best=null,bd=1e9;for(const x of CITIES.concat(EXTRA_DEST)){const d=hav(c,x.c);if(d<bd){bd=d;best=x;}}return best?best.g:"p";}
 
 // ---------- Mapa ----------
-const map = L.map("map",{zoomControl:true}).setView(S.driver,13);
+const map = L.map("map",Object.assign({zoomControl:true},window.V291_MOB?{renderer:L.svg({padding:0}),zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}:{})).setView(S.driver,13);
 // Proveedores de mapa (sin API key y sin depender de Referer, válidos al abrir desde file://)
 const ESRI="https://server.arcgisonline.com/ArcGIS/rest/services/";
 const PROVIDERS=[
@@ -986,14 +988,14 @@ let provIdx=0,baseLayer=null,labelLayer=null,tileErr=0,tileOk=0;
 function setProvider(i,auto){
   provIdx=i;const P=PROVIDERS[i];tileErr=0;tileOk=0;
   if(baseLayer)map.removeLayer(baseLayer);if(labelLayer){map.removeLayer(labelLayer);labelLayer=null;}
-  baseLayer=L.tileLayer(P.url,{maxZoom:19,maxNativeZoom:P.nz,subdomains:P.sub||"abc",className:P.cls||"",attribution:P.attr});
+  baseLayer=L.tileLayer(P.url,{...(window.V291_MOB?{keepBuffer:1,updateWhenZooming:false}:{}),maxZoom:19,maxNativeZoom:P.nz,subdomains:P.sub||"abc",className:P.cls||"",attribution:P.attr});
   baseLayer.on("tileload",()=>tileOk++);
   baseLayer.on("tileerror",()=>{tileErr++;
     // Fallback automático: muchos errores y casi ningún tile cargado -> siguiente proveedor
     if(tileErr>=4&&tileErr>tileOk*2&&provIdx<PROVIDERS.length-1){const nx=provIdx+1;setTimeout(()=>{if(provIdx===i){setProvider(nx,true);toast("El mapa no cargaba: cambiado a "+PROVIDERS[nx].n);}},0);}
   });
   baseLayer.addTo(map);
-  if(P.labels)labelLayer=L.tileLayer(P.labels,{maxZoom:19,maxNativeZoom:P.nz,pane:"overlayPane"}).addTo(map);
+  if(P.labels)labelLayer=L.tileLayer(P.labels,{...(window.V291_MOB?{keepBuffer:1,updateWhenZooming:false}:{}),maxZoom:19,maxNativeZoom:P.nz,pane:"overlayPane"}).addTo(map);
   const sel=document.getElementById("mapSel");if(sel)sel.value=i;
 }
 setProvider(0);
@@ -1052,7 +1054,7 @@ function drawZone(fit){
   const st=S.settings;
   if(zoneCircle)map.removeLayer(zoneCircle);
   if(centerMk)map.removeLayer(centerMk);
-  zoneCircle=((window.V29ZONE&&V29ZONE(st))||L.circle(st.center,{radius:st.radius*1000,color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:"6 6"})).addTo(map);
+  zoneCircle=((window.V29ZONE&&V29ZONE(st))||L.circle(st.center,{radius:st.radius*1000,color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:window.V291_MOB?null:"6 6"})).addTo(map);
   centerMk=L.circleMarker(st.center,{radius:4,color:"#21d07a",fillOpacity:1}).addTo(map);
   infoLayer.clearLayers();
   const city=nearestCity(st.center,40),air=airportFor(st.center),sta=stationFor(city);
@@ -1540,8 +1542,8 @@ async function newRequest(){
   if(T>0)cdT=setInterval(()=>{const left=T-(Date.now()-t0);
     if(!warned&&left<=10000){warned=true;stopReqLoop();playSound("warn",{rep:Math.max(1,Math.ceil(left/1000)),every:1});say("expira",VOZT.expira(Math.ceil(left/1000)),{tag:"req",after:"warn"});}
     if(left<=0){lvlEv("rej");toast("Solicitud caducada");dismiss();return;}
-    $("cdTxt").textContent=Math.ceil(left/1000)+" s";$("cdBar").style.width=(100*left/T)+"%";
-    $("cdBar").style.background=left<Math.min(10000,T*.25)?"var(--bad)":"var(--warn)";},200);
+    cdSet(left,T);
+    cdBg(left<Math.min(10000,T*.25)?"var(--bad)":"var(--warn)");},200);
 }
 // Animación breve (~2 s) del coche a lo largo de la ruta; solo visual
 let animating=false,animRaf=null;
@@ -2432,8 +2434,8 @@ function pqReqShow(r){layerReq.clearLayers();pqDraw(r,0);map.fitBounds(pqBounds(
   if(T>0)cdT=setInterval(()=>{const left=T-(Date.now()-t0);
     if(!warned&&left<=10000){warned=true;stopReqLoop();playSound("warn",{rep:Math.max(1,Math.ceil(left/1000)),every:1});say("expira",VOZT.expira(Math.ceil(left/1000)),{tag:"req",after:"warn"});}
     if(left<=0){lvlEv("rej");toast("Solicitud caducada");dismiss();return;}
-    $("cdTxt").textContent=Math.ceil(left/1000)+" s";$("cdBar").style.width=(100*left/T)+"%";
-    $("cdBar").style.background=left<Math.min(10000,T*.25)?"var(--bad)":"var(--warn)";},200);}
+    cdSet(left,T);
+    cdBg(left<Math.min(10000,T*.25)?"var(--bad)":"var(--warn)");},200);}
 // --- Imprevistos planificados (frecuencia: Ajustes › Imprevistos) ---
 function pqPlan(r){if(FORCE&&FORCE.pqEv)return FORCE.pqEv.map(e=>Object.assign({st:"plan",j:0,arr:null,d:15},e));
   const p=EV_FREQ[evS().freq]||0,out=[];if(!p||Math.random()>=p)return out;const n=Math.random()<.25?2:1;
@@ -3205,7 +3207,7 @@ $("vozStop").onclick=()=>vozCancel();
 if(SS()){try{SS().addEventListener?SS().addEventListener("voiceschanged",vozFill):(SS().onvoiceschanged=vozFill);}catch(e){}}
 syncVozUI();setTimeout(vozFill,600);setTimeout(vozFill,2500);
 // ---------- Móvil (Android) y app instalable (PWA) ----------
-const APP_VER="29.0";
+const APP_VER="29.4";
 const MQ_MOB=window.matchMedia("(max-width:899px),(max-height:520px) and (pointer:coarse)");
 function isMob(){return MQ_MOB.matches;}
 // Márgenes al encuadrar la ruta: en PC la tarjeta está a la izquierda; en móvil, abajo (vertical) o a la izquierda (horizontal)
@@ -4128,7 +4130,7 @@ async function hailShow(){if(searching||curReq||trip||!online)return;searching=t
   clearInterval(cdT);const T=SEC*1000,t0=Date.now();
   cdT=setInterval(()=>{const left=T-(Date.now()-t0);if(!$("cdTxt")){clearInterval(cdT);return;}
     if(left<=0){toast("🙋 El cliente ha parado otro coche");dismiss();return;}
-    $("cdTxt").textContent=Math.ceil(left/1000)+" s";$("cdBar").style.width=(100*left/T)+"%";},200);}
+    cdSet(left,T);},200);}
 function hailAccept(){const r=curReq;if(!r||!r.hail)return;clearInterval(cdT);accept();if(!trip||trip.r!==r)return;
   const T=trip,now=Date.now();T.phase=2;T.si=1;T.pickedAt=T.arrivedAt=now;T.hail=1;
   if(T.ev&&T.ev.plan)T.ev.plan=T.ev.plan.filter(e=>e.type!=="tarde"&&e.type!=="cancela");
@@ -4321,7 +4323,8 @@ const INT_Q=[["Te lo tengo que decir: llevo todo el viaje empalmado mirándote. 
   ["Qué pena que el viaje se acabe. Contigo me correría sin pensarlo."],["¿Siempre eres así de puta o solo te pones así con los clientes?"],["Me has puesto a mil. ¿Me dejas tu número para follarte cuando quieras?"],["Con una conductora como tú, iría a cualquier sitio… y te comería entera."],
   ["Me estás poniendo muy caliente con esa voz. Baja la ventanilla y déjame verte mejor."],["Llevo imaginándome cómo te la chupo desde que subí."],["{D}, me tienes muy cachondo. Si paras un momento te como el coño."],
   ["No puedo dejar de mirarte el culo. ¿Te lo digo o me callo?"],["Si paras en un sitio oscuro te bajo las bragas y te follo ahí mismo."],["Me tienes empalmado desde el primer semáforo. ¿Lo notas?"],["Qué ganas de correrme en tu boca, {D}."],["Llevas el escote tan bajo que se me va la vista. ¿Lo haces a propósito?"],
-  ["Me muero por meterte la polla hasta el fondo."],["¿Te gusta que te hablen sucio o prefieres que me calle?"],["Llevo todo el viaje imaginándome tu coño mojado."],["Si no estuvieras trabajando te pediría que te sentaras encima de mí."],["{D}, tienes un cuerpo de puta madre. Me tienes loco."]];
+  ["Me muero por meterte la polla hasta el fondo."],["¿Te gusta que te hablen sucio o prefieres que me calle?"],["Llevo todo el viaje imaginándome tu coño mojado."],["Si no estuvieras trabajando te pediría que te sentaras encima de mí."],["{D}, tienes un cuerpo de puta madre. Me tienes loco."],
+  ["Me pones tan cachondo que se me nota en el pantalón."],["¿Nunca te han follado en el coche?"],["Llevo imaginándome cómo te corres."],["Si me dejas, te como entera ahora mismo."],["{D}, qué ganas de verte las tetas."]];
 const REQS=[["cargador","🔌","¿Tienes un cargador de móvil? Me queda un 3 %.","Le dejas el cable USB.","Lo siento, no llevo cargador."],["panuelos","🤧","¿Tendrías un pañuelo de papel, por favor?","Le pasas un paquete de pañuelos.","Lo siento, se me han acabado."],
   ["agua","💧","¿Llevarías una botellita de agua?","Le das una botella de agua.","Perdona, hoy no llevo agua."],["temp","🌡️","¿Puedes subir un poco la temperatura? Tengo frío.","Subes un par de grados.","Lo dejo así, que se empañan los cristales."],
   ["temp2","❄️","¿Puedes poner un poco más fuerte el aire?","Pones el aire más fuerte.","Lo siento, ya va bastante fuerte."],["ventana","🪟","¿Te importa si bajo la ventanilla?","Le dices que sí, sin problema.","Prefiero cerrada, por el ruido."],
@@ -4968,7 +4971,7 @@ function fxLiteWanted(){const v=S.settings.fxLite;return v==null?isMob():!!v;}
 let _mapFx0=null;
 function mapFxApply(on){try{if(!_mapFx0)_mapFx0={z:map._zoomAnimated,f:map._fadeAnimated};if(on&&map._animatingZoom)map.stop();map._zoomAnimated=on?false:_mapFx0.z;map._fadeAnimated=on?false:_mapFx0.f;
   map.getContainer().classList.toggle("leaflet-fade-anim",!on&&!!_mapFx0.f);}catch(e){}}
-function ovNudge(){const o=$("overlay");if(!o||!document.body.classList.contains("fxlite"))return;o.style.transform="translateZ(0)";requestAnimationFrame(()=>{o.style.transform="";});}
+function ovNudge(){const o=$("overlay");if(!o||window.V291_MOB||!document.body.classList.contains("fxlite"))return;o.style.transform="translateZ(0)";requestAnimationFrame(()=>{o.style.transform="";});}
 // 27.2: tras aceptar paquetería, cuando el mapa termina de recolocarse se fuerza un repintado limpio de la tarjeta (Android)
 function ovSettle(){if(!document.body.classList.contains("fxlite"))return;let done=false;const go=()=>{if(done)return;done=true;ovNudge();setTimeout(ovNudge,400);};
   try{map.once("moveend",()=>requestAnimationFrame(go));}catch(e){}setTimeout(go,700);}
@@ -5441,8 +5444,8 @@ const v29Lite=()=>{try{return isMob()||document.body.classList.contains("fxlite"
 function v29ZonePoly(c,km,n){n=n||(v29Lite()?96:128);const la=c[0]*Math.PI/180,dLat=km/6371*180/Math.PI,dLon=dLat/Math.max(.1,Math.cos(la)),P=[];
   for(let i=0;i<n;i++){const t=i/n*2*Math.PI;P.push([c[0]+dLat*Math.sin(t),c[1]+dLon*Math.cos(t)]);}return P;}
 window.V29ZONE=st=>{if(window.NO_V29)return null;const lite=v29Lite()&&v29S().zona;
-  const pg=L.polygon(v29ZonePoly(st.center,st.radius),{color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:lite?null:"6 6",interactive:false});pg.v29zone=true;return pg;};
-function v29BigCheck(){if(window.NO_V29)return;const sz=map.getSize(),lim=2*Math.max(sz.x,sz.y),on=v29S().zona&&v29Lite();
+  const pg=L.polygon(v29ZonePoly(st.center,st.radius),{color:"#21d07a",weight:2,fillColor:"#21d07a",fillOpacity:.07,dashArray:(lite||window.V291_MOB)?null:"6 6",interactive:false});pg.v29zone=true;return pg;};
+function v29BigCheck(){if(window.NO_V29)return;const sz=map.getSize(),lim=2*Math.max(sz.x,sz.y),on=!!window.V291_MOB||v29S().zona&&v29Lite();
   map.eachLayer(l=>{if(l instanceof L.Circle&&l._path&&l._radius!=null){const big=on&&l._radius>lim;const d=big?"none":"";if(l._path.style.display!==d)l._path.style.display=d;}});}
 if(!window.NO_V29){
   map.on("layeradd",e=>{try{const l=e.layer;if(!l||!l.options||!l.setStyle||!v29S().zona||!v29Lite())return;
@@ -5646,7 +5649,7 @@ function v29EtsTxt(km,min){const k=+v29S().escala||19,x=(+km||0)/k,t=(+min||0)/k
 function v29EtsApply(){if(!V29on("ets2"))return;const ov=$("overlay");if(!ov)return;const c=ov.querySelector(".req,.trip");if(!c||c.classList.contains("tsum")||c.querySelector(".v29ets"))return;
   const r=c.classList.contains("trip")?(trip&&trip.r):curReq;if(!r||!(r.km>0))return;const k=+v29S().escala||19;
   const h=`<div class="sub v29ets" title="Escala de ETS2 1:${k} (se cambia en Ajustes)">${v29EtsTxt(r.km,r.min)}${r.pickupDist/k>=.05?` · recogida ~${v29Num(r.pickupDist/k)} km`:""} <span class="simtag">estimado</span></div>`;
-  const s=[...c.querySelectorAll(".sub")].find(e=>/\d km/.test(e.textContent));if(s)s.insertAdjacentHTML("afterend",h);else{const p=c.querySelector(".price");if(p)p.insertAdjacentHTML("afterend",h);else c.insertAdjacentHTML("afterbegin",h);}}
+  const s=[...c.querySelectorAll(".sub")].find(e=>/\d km/.test(e.textContent));if(s)s.insertAdjacentHTML("afterend",h);else{const p=c.querySelector(".price");if(p)p.insertAdjacentHTML("afterend",h);else{const tr=[...c.querySelectorAll("div")].find(e=>e.children.length<=3&&/^Trayecto/.test(e.textContent.trim()));if(tr)tr.insertAdjacentHTML("afterend",h);else c.insertAdjacentHTML("afterbegin",h);}}}
 if(!window.NO_V29)new MutationObserver(()=>{try{v29EtsApply();}catch(e){}}).observe($("overlay"),{childList:true,subtree:true});
 
 // ---------- (9) Pago con tarjeta fallido (muy raro, simulado) ----------
@@ -5765,11 +5768,147 @@ if(!V29off()){syncV29UI();try{v29StopUI();v27DirtyUI();regUI();}catch(e){}
 .v29stop{margin-top:6px;background:#2a313b;color:var(--txt)}.v29stop.on{background:#8a5a00;color:#fff}#mBar .v29stop{margin:0;padding:6px 10px;font-size:13px;width:auto;min-width:0;flex:0 0 auto}#mBar .v29stop~*{}#mBar:has(.v29stop:not([hidden])) #mOnline{min-width:118px}
 .v29amb{margin-top:6px;background:#3b2a3f;color:#fff}.v29b{margin-top:6px;background:#23415e;color:#fff}.v29blk{margin-top:4px}
 .v29tg{font-size:11px;color:#9fb3c8}.v29ets{color:#8fd3ff}.v29h{margin-top:3px}
+
+/* 29.1 móvil: la hoja inferior sin capas GPU ni efectos (Android dejaba de pintar la parte baja) */
+html.v291m #overlay,html.v291m #v26P{will-change:auto!important;transform:none!important;contain:none!important;isolation:auto!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;border-radius:0!important}
+html.v291m #overlay *,html.v291m #v26P *{will-change:auto!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;box-shadow:none!important;text-shadow:none!important;content-visibility:visible!important;contain:none!important;isolation:auto!important;transition:none!important}
+html.v291m #overlay *:not(.spin),html.v291m #v26P *:not(.spin){animation:none!important}
+html.v291m #overlay .req,html.v291m #overlay .trip{border-radius:0!important;box-shadow:none!important}
+html.v291m .leaflet-tile,html.v291m .leaflet-pane,html.v291m .leaflet-zoom-animated{will-change:auto!important}
 </style>`);}
 window.V29={S:v29S,on:V29on,R:v29R,DEF:V29_DEF,M:V29M,big:v29BigCheck,shrink:v29Shrink,tick:v29Tick,rep:()=>trip&&trip.v28&&v29RepStart(trip.v28),pide:v29Pide,pideProb:v29PideProb,
   block:v29Block,blk:v29Blk,isBlk:v29IsBlk,unblock:v29Unblock,stop:v29StopToggle,stOn:v29StOn,street:v29Street,stTick:v29StTick,amb:v29Amb,ets:v29EtsTxt,etsApply:v29EtsApply,
   pay:v29Pay,payAns:v29PayAns,payTick:v29PayTick,numAsk:v29NumAsk,regEnsure:v29RegEnsure,notes:()=>S.v29notes||[],data:V29_DATA,tags:v29Tags,ver:APP_VER};
 
+
+// ==================== 29.1: hojas inferiores estables en Android ====================
+function cdSet(left,T){const t=$("cdTxt"),b=$("cdBar");if(!window.V291_MOB){if(t)t.textContent=Math.ceil(left/1000)+" s";if(b)b.style.width=(100*left/T)+"%";return;}
+  const sec=Math.ceil(left/1000),tx=sec+" s";if(t&&t.textContent!==tx)t.textContent=tx;
+  const w=Math.round(100*Math.min(T,sec*1000)/T)+"%";if(b&&b.style.width!==w)b.style.width=w;}
+function cdBg(c){const b=$("cdBar");if(b&&b.style.background!==c)b.style.background=c;}
+if(window.V291_MOB){document.documentElement.classList.add("v291m");
+  map.on("layeradd",e=>{try{const l=e.layer;if(l&&l.setStyle&&l.options&&l.options.dashArray){l.options.v291dash=l.options.dashArray;l.setStyle({dashArray:null});}}catch(_){}});}
+window.V291={mob:!!window.V291_MOB,canvas:()=>!!(map.options.preferCanvas),any3d:()=>!!L.Browser.any3d};
+
+// ---------- v29.3: insignia de versión en el Mapa (móvil) y «Forzar actualización» ----------
+async function v293Force(){try{toast("🔄 Actualizando…");}catch(e){}
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)for(const r of await navigator.serviceWorker.getRegistrations())await r.unregister();}catch(e){}
+  try{if(window.caches)for(const k of await caches.keys())if(k.startsWith("simconductor-"))await caches.delete(k);}catch(e){}
+  try{save();}catch(e){}location.reload();}
+{const h=$("secV29");if(h&&!$("v293Force"))h.querySelector("h2").insertAdjacentHTML("afterend",'<button class="mbtn" id="v293Force" type="button" style="margin:4px 0">🔄 Forzar actualización</button><div class="hint">Borra solo la copia guardada de la app (no tus datos) y recarga.</div>');
+  if($("v293Force"))$("v293Force").onclick=v293Force;}
+if(window.V291_MOB){const m=$("map");if(m&&!$("v293Ver"))m.insertAdjacentHTML("beforeend",'<div id="v293Ver" style="position:absolute;left:12px;top:96px;z-index:500;font-size:11px;font-weight:700;color:#9fb3c8;background:#11161d;border:1px solid #2c3644;border-radius:8px;padding:0 6px;pointer-events:none">v'+APP_VER+'</div>');}
+
+// ---------- v29.4 (móvil): con una oferta o una hoja de paquetería, el mapa se quita (display:none) y la tarjeta ocupa la pantalla ----------
+if(window.V291_MOB)(function(){document.head.insertAdjacentHTML("beforeend",`<style>
+html.v294c #map{display:none!important}
+html.v294c:not(.v294m),html.v294c:not(.v294m) body{height:auto!important;min-height:0!important;overflow:visible!important;position:static!important}html.v294c:not(.v294m) #app{height:auto!important;display:block!important;overflow:visible!important;position:static!important}html.v294c:not(.v294m) #mapWrap{height:auto!important;overflow:visible!important;position:static!important}html.v294c:not(.v294m) #overlay{position:static!important;max-height:none!important;overflow:visible!important;padding-bottom:70px!important;margin-top:44px}html.v294c #overlay{border-radius:0!important}html.v294c #v294Bar{position:fixed!important}
+html.v294c.v294m #map{display:block!important}
+html.v294c.v294m #overlay{display:none!important}
+#v294Bar{display:none;position:absolute;left:0;right:0;top:0;height:44px;z-index:1002;background:#11161d;border-bottom:1px solid #2c3644;align-items:center;justify-content:flex-end;padding:0 8px}
+html.v294c #v294Bar{display:flex}
+html.v294c.v294m #v294Bar{background:transparent;border:0;pointer-events:none;justify-content:center;top:8px}
+#v294Btn{pointer-events:auto;min-height:36px;padding:4px 12px;border-radius:10px;border:1px solid #2c3644;background:#1c2430;color:#e6edf3;font-weight:700;font-size:14px}
+html.v294c #v293Ver{top:52px}
+</style>`);
+ const w=$("mapWrap");if(w&&!$("v294Bar"))w.insertAdjacentHTML("beforeend",'<div id="v294Bar"><button id="v294Btn" type="button">🗺️ Ver mapa</button></div>');
+ const V294={map:false,card:false},H=document.documentElement;window.V294=V294;
+ const isCard=()=>{const o=$("overlay");if(!o||!o.children.length)return false;return !!o.querySelector("#bOk,#pqReq,#pqClock,[id^=bPq]")||/Reparto en curso/.test(o.textContent);};
+ const showMap=()=>{try{map.invalidateSize({pan:false,animate:false});}catch(e){}try{v29Refit();}catch(e){}};
+ const sync=()=>{const c=isCard();if(c!==V294.card){V294.card=c;if(!c)V294.map=false;}
+   const was=H.classList.contains("v294c")&&!H.classList.contains("v294m");
+   H.classList.toggle("v294c",c);H.classList.toggle("v294m",c&&V294.map);
+   if($("v294Btn"))$("v294Btn").textContent=V294.map?"📄 Ver tarjeta":"🗺️ Ver mapa";
+   const now=c&&!V294.map;if(was!==now)scrollTo(0,0);if(was&&!now)requestAnimationFrame(showMap);};
+ if(!$("v294Btn"))return;$("v294Btn").onclick=()=>{V294.map=!V294.map;sync();if(V294.map)requestAnimationFrame(showMap);};
+ new MutationObserver(sync).observe($("overlay"),{childList:true,subtree:true});sync();})();
+
+// ==================== Versión Gancho: situaciones adultas explícitas ====================
+const V30_DEF={grabar:true,mirar:true,mano:true,bragueta:true,desvio:true,paja:true,escalada:true};
+const V30_LBL={grabar:"📱 Cliente graba con el móvil",mirar:"👀 Mirar tetas / cuerpo descaradamente",mano:"✋ Mano en el muslo o roce",bragueta:"👖 Abrir bragueta / bajarse el pantalón",desvio:"🌑 Proponer desvío a sitio oscuro",paja:"🍆 Masturbarse disimuladamente",escalada:"🔥 Escalada: preguntar tamaño y enseñar"};
+function v30S(){return S.v30=S.v30||{...V30_DEF};}
+function V30on(k){return v30S()[k]!==false;}
+function v30Cd(k,ms){const c=S.v30cd=S.v30cd||{};if(c[k]&&Date.now()<c[k])return false;c[k]=Date.now()+(ms||180000);return true;}
+function v30Log(ic,t){try{v26Log(ic,t,"v30");}catch(e){}}
+function v30Ask(o){try{v26Ask(o);}catch(e){}}
+function v30Adults(){try{return (typeof v28Adults==="function"?v28Adults():[]).filter(x=>x&&x.p&&(+x.p.edad||0)>=18);}catch(e){return [];}}
+function v30Copilot(){const A=v30Adults();return A.find(x=>x.P&&x.P.seat==="copiloto")||A[0];}
+function v30Size(){return Math.floor(12+Math.random()*9);} // 12-20
+function v30Sit(k){
+  const A=v30Adults();if(!A.length||!trip)return;
+  const x=k==="mirar"||k==="mano"?v30Copilot():A[0];if(!x)return;
+  const nm=typeof v28nm==="function"?v28nm(x.p):(x.p.name||"Cliente");
+  const key=x.P&&x.P.key;
+  if(k==="grabar"&&V30on("grabar")&&v30Cd("grabar")){
+    v30Ask({k:"v30grabar",ic:"📱",title:`${nm} te graba con el móvil`,body:`<div class="v26q">Notas que ${esc(nm)} tiene el móvil apuntando disimuladamente hacia tu escote o piernas.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Seguirle el juego","ok"],["claro","✋ Cortar claramente","no"],["edu","🙂 Cortar con educación","mid"]],snd:"v30",voz:`${nm} te está grabando. ¿Le sigues el juego o lo cortas?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("📱",`${nm} te graba: ${{seguir:"le sigues el juego",claro:"lo cortas claramente",edu:"lo cortas con educación"}[a]}`);if(a==="seguir")v26Eff(key,.1,"muy abierta");else if(a==="claro")v26Eff(key,-.05);}});
+  }
+  if(k==="mirar"&&V30on("mirar")&&v30Cd("mirar")){
+    v30Ask({k:"v30mirar",ic:"👀",title:`${nm} te mira las tetas`,body:`<div class="v26q">${esc(nm)} te mira el escote descaradamente${x.P&&x.P.seat==="copiloto"?" desde el asiento del copiloto":""}.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Dejar que mire","ok"],["claro","✋ Decirle que deje de mirar","no"],["edu","🙂 Hacer como que no pasa nada","mid"]],snd:"v30",voz:`${nm} te está mirando las tetas. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("👀",`${nm} te mira las tetas: ${{seguir:"le dejas",claro:"le dices que pare",edu:"haces como que no"}[a]}`);if(a==="seguir")v26Eff(key,.12,"muy sexi");}});
+  }
+  if(k==="mano"&&V30on("mano")&&v30Cd("mano")){
+    v30Ask({k:"v30mano",ic:"✋",title:`${nm} te pone la mano en el muslo`,body:`<div class="v26q">${esc(nm)} “accidentalmente” te roza o te pone la mano en el muslo.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Dejar la mano","ok"],["claro","✋ Apartarle la mano claramente","no"],["edu","🙂 Apartarla con educación","mid"]],snd:"v30",voz:`${nm} te ha puesto la mano en el muslo. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("✋",`${nm} mano en el muslo: ${{seguir:"le dejas",claro:"se la apartas claro",edu:"se la apartas con educación"}[a]}`);if(a==="seguir")v26Eff(key,.15,"muy caliente");}});
+  }
+  if(k==="bragueta"&&V30on("bragueta")&&v30Cd("bragueta")){
+    v30Ask({k:"v30bra",ic:"👖",title:`${nm} se abre la bragueta`,body:`<div class="v26q">${esc(nm)} dice que tiene calor y se baja un poco el pantalón o se abre la bragueta.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Seguirle el rollo","ok"],["claro","✋ Decirle que se suba el pantalón","no"],["edu","🙂 Ignorarlo","mid"]],snd:"v30",voz:`${nm} se ha abierto la bragueta. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("👖",`${nm} bragueta: ${{seguir:"le sigues",claro:"le dices que se suba",edu:"lo ignoras"}[a]}`);if(a==="seguir")v26Eff(key,.18,"muy puta");}});
+  }
+  if(k==="desvio"&&V30on("desvio")&&v30Cd("desvio")){
+    v30Ask({k:"v30des",ic:"🌑",title:`${nm} propone un desvío`,body:`<div class="v26q">«${esc(nm)}: ¿Podemos parar un momento en un sitio oscuro? Solo un rato…»</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Aceptar el desvío","ok"],["claro","✋ Decirle que no","no"],["edu","🙂 Decirle que no con educación","mid"]],snd:"v30",voz:`${nm} quiere un desvío a un sitio oscuro. ¿Aceptas?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("🌑",`${nm} desvío: ${{seguir:"aceptas",claro:"dices que no claro",edu:"dices que no con educación"}[a]}`);if(a==="seguir")v26Eff(key,.2,"muy abierta");}});
+  }
+  if(k==="paja"&&V30on("paja")&&v30Cd("paja")){
+    v30Ask({k:"v30paja",ic:"🍆",title:`${nm} se masturba`,body:`<div class="v26q">Notas que ${esc(nm)} se está tocando disimuladamente en el asiento.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Seguir conduciendo y tontear","ok"],["claro","✋ Pararlo inmediatamente","no"],["edu","🙂 Hacer como que no lo ves","mid"]],snd:"v30",voz:`${nm} se está masturbando. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("🍆",`${nm} se masturba: ${{seguir:"le sigues el juego",claro:"lo paras",edu:"haces como que no"}[a]}`);if(a==="seguir")v26Eff(key,.22,"muy caliente");}});
+  }
+}
+function v30Escalada(){
+  if(!V30on("escalada")||!trip||!v30Cd("esc",120000))return;
+  const A=v30Adults();if(!A.length)return;
+  const x=A[0],nm=typeof v28nm==="function"?v28nm(x.p):(x.p.name||"Cliente"),key=x.P&&x.P.key;
+  v30Ask({k:"v30asksize",ic:"🔥",title:`¿Le preguntas a ${nm} si la tiene grande?`,body:`<div class="sub">La conversación está muy intensa. Puedes preguntarle o no.</div>`,
+    opts:[["ask","🔥 Preguntarle «¿la tienes grande?»","ok"],["no","➡️ No preguntar","no"]],snd:"v30",voz:`¿Le preguntas a ${nm} si la tiene grande?`,trip:true,
+    on:a=>{if(a!=="ask"){v30Log("🔥","No le preguntas el tamaño");return;}
+      v30Log("🔥",`Le preguntas a ${nm} si la tiene grande`);
+      v30Ask({k:"v30show",ic:"🍆",title:`${nm} responde`,body:`<div class="v26q">«${Math.random()<.6?"Sí, bastante… ¿quieres verla?":"Normalita… pero si quieres te la enseño."}»</div><div class="sub">Puedes pedirle que te la enseñe.</div>`,
+        opts:[["show","🍆 Pedirle que te la enseñe","ok"],["no","➡️ No pedírselo","no"]],snd:"v30",voz:`¿Le pides a ${nm} que te la enseñe?`,trip:true,
+        on:b=>{if(b!=="show"){v30Log("🍆","No le pides que te la enseñe");return;}
+          const dare=Math.random()<.7,sz=v30Size();
+          if(dare){v30Log("🍆",`${nm} se la enseña: ${sz} cm`);v26Eff(key,.25,"muy puta y abierta");
+            v30Ask({k:"v30seen",ic:"🍆",title:`${nm} te la enseña`,body:`<div class="v26q">${esc(nm)} se la saca. Mide aproximadamente <b>${sz} cm</b>.</div><div class="sub">Situación simulada.</div>`,
+              opts:[["ok","😏 Continuar","ok"],["cut","✋ Cortar aquí","no"]],snd:"v30",voz:`${nm} te la ha enseñado. Mide ${sz} centímetros.`,trip:true,
+              on:()=>{}});
+          }else{v30Log("🍆",`${nm} no se atreve a enseñártela`);v26Eff(key,.05);}}});}});
+}
+// Hook into trip tick (lightweight)
+{const _t=typeof v28TickMore==="function"?v28TickMore:null;
+ if(_t){const orig=_t;v28TickMore=function(T,now){try{orig.apply(this,arguments);}catch(e){}
+  try{if(!trip||!V30on("grabar")&&!V30on("mirar")&&!V30on("mano")&&!V30on("bragueta")&&!V30on("desvio")&&!V30on("paja")&&!V30on("escalada"))return;
+    if(Math.random()<.015)v30Sit(Math.random()<.5?"mirar":"grabar");
+    else if(Math.random()<.01)v30Sit("mano");
+    else if(Math.random()<.008)v30Sit("bragueta");
+    else if(Math.random()<.006)v30Sit("desvio");
+    else if(Math.random()<.005)v30Sit("paja");
+    if(trip.v28&&trip.v28.int&&trip.v28.int>=7&&Math.random()<.02)v30Escalada();
+  }catch(e){}};}
+}
+// Settings UI
+{const a=$("secV29")||$("secV28")||$("secV27")||$("secV26");if(a&&!$("secV30")){
+  a.insertAdjacentHTML("afterend",`<div class="sec" id="secV30"><h2>Versión Gancho · Situaciones adultas <span class="simtag">explícito simulado</span></h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 10px;margin-top:6px">${Object.keys(V30_DEF).map(k=>`<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-v30="${k}" ${V30on(k)?"checked":""}> ${V30_LBL[k]}</label>`).join("")}</div>
+  <div class="hint">Todas las situaciones son <b>simuladas</b> y explícitas. Puedes seguirle el juego o cortar en cualquier momento. Se guardan en exportar/importar.</div></div>`);
+  document.querySelectorAll("#secV30 input[data-v30]").forEach(c=>c.onchange=()=>{v30S()[c.dataset.v30]=c.checked;save();toast(V30_LBL[c.dataset.v30]+": "+(c.checked?"activado":"desactivado"));});
+}}
+// Title / name independence
+try{document.title="Simulador Conductor · Versión Gancho";const h=document.querySelector("header h1");if(h)h.innerHTML='🚗 Simulador <span>Conductor</span> · Gancho';}catch(e){}
 </script>
 </body>
 </html>

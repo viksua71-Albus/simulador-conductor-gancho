@@ -2,7 +2,7 @@
 // Estrategia: la página (index.html) se pide primero a la red (así cada versión nueva llega sola al estar en línea)
 // y, si no hay red, se usa la copia guardada. Iconos, manifest y Leaflet: copia guardada + actualización en segundo plano.
 // Mapas, rutas y lugares (teselas, OSRM, Photon, Overpass, Nominatim) NO se interceptan: solo la caché normal del navegador.
-const VER = "29.0";
+const VER = "29.4";
 const CACHE = "simconductor-" + VER;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/maskable-192.png", "./icons/maskable-512.png"];
 const CDN_PREFIX = "https://unpkg.com/leaflet@1.9.4/dist/";
