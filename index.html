@@ -5824,8 +5824,8 @@ html.v294c #v293Ver{top:52px}
  new MutationObserver(sync).observe($("overlay"),{childList:true,subtree:true});sync();})();
 
 // ==================== Versión Gancho: situaciones adultas explícitas ====================
-const V30_DEF={grabar:true,mirar:true,mano:true,bragueta:true,desvio:true,paja:true,escalada:true};
-const V30_LBL={grabar:"📱 Cliente graba con el móvil",mirar:"👀 Mirar tetas / cuerpo descaradamente",mano:"✋ Mano en el muslo o roce",bragueta:"👖 Abrir bragueta / bajarse el pantalón",desvio:"🌑 Proponer desvío a sitio oscuro",paja:"🍆 Masturbarse disimuladamente",escalada:"🔥 Escalada: preguntar tamaño y enseñar"};
+const V30_DEF={grabar:true,mirar:true,mano:true,bragueta:true,desvio:true,paja:true,escalada:true,cancion:true,describir:true,trio:true};
+const V30_LBL={grabar:"📱 Cliente graba con el móvil",mirar:"👀 Mirar tetas / cuerpo descaradamente",mano:"✋ Mano en el muslo o roce",bragueta:"👖 Abrir bragueta / bajarse el pantalón",desvio:"🌑 Proponer desvío a sitio oscuro",paja:"🍆 Masturbarse disimuladamente",escalada:"🔥 Escalada: preguntar tamaño y enseñar",cancion:"🎵 Pedir canción erótica",describir:"💬 Pedir que te describas",trio:"👥 Proponer un trío"};
 function v30S(){return S.v30=S.v30||{...V30_DEF};}
 function V30on(k){return v30S()[k]!==false;}
 function v30Cd(k,ms){const c=S.v30cd=S.v30cd||{};if(c[k]&&Date.now()<c[k])return false;c[k]=Date.now()+(ms||180000);return true;}
@@ -5834,45 +5834,71 @@ function v30Ask(o){try{v26Ask(o);}catch(e){}}
 function v30Adults(){try{return (typeof v28Adults==="function"?v28Adults():[]).filter(x=>x&&x.p&&(+x.p.edad||0)>=18);}catch(e){return [];}}
 function v30Copilot(){const A=v30Adults();return A.find(x=>x.P&&x.P.seat==="copiloto")||A[0];}
 function v30Size(){return Math.floor(12+Math.random()*9);} // 12-20
+function v30IsMale(p){return p&&(p.g==="m"||p.g==="hombre"||!p.g);}
+function v30MaleAdults(){return v30Adults().filter(x=>v30IsMale(x.p));}
 function v30Sit(k){
   const A=v30Adults();if(!A.length||!trip)return;
-  const x=k==="mirar"||k==="mano"?v30Copilot():A[0];if(!x)return;
+  const maleOnly=["bragueta","paja","escalada","ensenar"];
+  if(maleOnly.includes(k)&&!v30MaleAdults().length)return;
+  const pool=maleOnly.includes(k)?v30MaleAdults():A;
+  if(!pool.length)return;
+  const x=k==="mirar"||k==="mano"? (v30Copilot()&&v30IsMale(v30Copilot().p)?v30Copilot():pool[0]) : pool[0];
+  if(!x)return;
   const nm=typeof v28nm==="function"?v28nm(x.p):(x.p.name||"Cliente");
   const key=x.P&&x.P.key;
-  if(k==="grabar"&&V30on("grabar")&&v30Cd("grabar")){
+  const isF=!v30IsMale(x.p);
+  if(isF&&Math.random()>.15)return; // casi mínimo con clientas
+
+  if(k==="grabar"&&V30on("grabar")&&v30Cd("grabar",420000)){
     v30Ask({k:"v30grabar",ic:"📱",title:`${nm} te graba con el móvil`,body:`<div class="v26q">Notas que ${esc(nm)} tiene el móvil apuntando disimuladamente hacia tu escote o piernas.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Seguirle el juego","ok"],["claro","✋ Cortar claramente","no"],["edu","🙂 Cortar con educación","mid"]],snd:"v30",voz:`${nm} te está grabando. ¿Le sigues el juego o lo cortas?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("📱",`${nm} te graba: ${{seguir:"le sigues el juego",claro:"lo cortas claramente",edu:"lo cortas con educación"}[a]}`);if(a==="seguir")v26Eff(key,.1,"muy abierta");else if(a==="claro")v26Eff(key,-.05);}});
   }
-  if(k==="mirar"&&V30on("mirar")&&v30Cd("mirar")){
+  if(k==="mirar"&&V30on("mirar")&&v30Cd("mirar",360000)){
     v30Ask({k:"v30mirar",ic:"👀",title:`${nm} te mira las tetas`,body:`<div class="v26q">${esc(nm)} te mira el escote descaradamente${x.P&&x.P.seat==="copiloto"?" desde el asiento del copiloto":""}.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Dejar que mire","ok"],["claro","✋ Decirle que deje de mirar","no"],["edu","🙂 Hacer como que no pasa nada","mid"]],snd:"v30",voz:`${nm} te está mirando las tetas. ¿Qué haces?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("👀",`${nm} te mira las tetas: ${{seguir:"le dejas",claro:"le dices que pare",edu:"haces como que no"}[a]}`);if(a==="seguir")v26Eff(key,.12,"muy sexi");}});
   }
-  if(k==="mano"&&V30on("mano")&&v30Cd("mano")){
+  if(k==="mano"&&V30on("mano")&&v30Cd("mano",480000)){
     v30Ask({k:"v30mano",ic:"✋",title:`${nm} te pone la mano en el muslo`,body:`<div class="v26q">${esc(nm)} “accidentalmente” te roza o te pone la mano en el muslo.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Dejar la mano","ok"],["claro","✋ Apartarle la mano claramente","no"],["edu","🙂 Apartarla con educación","mid"]],snd:"v30",voz:`${nm} te ha puesto la mano en el muslo. ¿Qué haces?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("✋",`${nm} mano en el muslo: ${{seguir:"le dejas",claro:"se la apartas claro",edu:"se la apartas con educación"}[a]}`);if(a==="seguir")v26Eff(key,.15,"muy caliente");}});
   }
-  if(k==="bragueta"&&V30on("bragueta")&&v30Cd("bragueta")){
+  if(k==="bragueta"&&V30on("bragueta")&&v30IsMale(x.p)&&v30Cd("bragueta",600000)){
     v30Ask({k:"v30bra",ic:"👖",title:`${nm} se abre la bragueta`,body:`<div class="v26q">${esc(nm)} dice que tiene calor y se baja un poco el pantalón o se abre la bragueta.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Seguirle el rollo","ok"],["claro","✋ Decirle que se suba el pantalón","no"],["edu","🙂 Ignorarlo","mid"]],snd:"v30",voz:`${nm} se ha abierto la bragueta. ¿Qué haces?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("👖",`${nm} bragueta: ${{seguir:"le sigues",claro:"le dices que se suba",edu:"lo ignoras"}[a]}`);if(a==="seguir")v26Eff(key,.18,"muy puta");}});
   }
-  if(k==="desvio"&&V30on("desvio")&&v30Cd("desvio")){
+  if(k==="desvio"&&V30on("desvio")&&v30Cd("desvio",540000)){
     v30Ask({k:"v30des",ic:"🌑",title:`${nm} propone un desvío`,body:`<div class="v26q">«${esc(nm)}: ¿Podemos parar un momento en un sitio oscuro? Solo un rato…»</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Aceptar el desvío","ok"],["claro","✋ Decirle que no","no"],["edu","🙂 Decirle que no con educación","mid"]],snd:"v30",voz:`${nm} quiere un desvío a un sitio oscuro. ¿Aceptas?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("🌑",`${nm} desvío: ${{seguir:"aceptas",claro:"dices que no claro",edu:"dices que no con educación"}[a]}`);if(a==="seguir")v26Eff(key,.2,"muy abierta");}});
   }
-  if(k==="paja"&&V30on("paja")&&v30Cd("paja")){
+  if(k==="paja"&&V30on("paja")&&v30IsMale(x.p)&&v30Cd("paja",720000)){
     v30Ask({k:"v30paja",ic:"🍆",title:`${nm} se masturba`,body:`<div class="v26q">Notas que ${esc(nm)} se está tocando disimuladamente en el asiento.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
       opts:[["seguir","😏 Seguir conduciendo y tontear","ok"],["claro","✋ Pararlo inmediatamente","no"],["edu","🙂 Hacer como que no lo ves","mid"]],snd:"v30",voz:`${nm} se está masturbando. ¿Qué haces?`,trip:true,
       on:a=>{if(a==="ign")a="edu";v30Log("🍆",`${nm} se masturba: ${{seguir:"le sigues el juego",claro:"lo paras",edu:"haces como que no"}[a]}`);if(a==="seguir")v26Eff(key,.22,"muy caliente");}});
   }
+  // Nuevas situaciones
+  if(k==="cancion"&&V30on("cancion")&&v30Cd("cancion",480000)){
+    v30Ask({k:"v30can",ic:"🎵",title:`${nm} pide una canción erótica`,body:`<div class="v26q">${esc(nm)} te pide que subas el volumen de una canción muy subida de tono o que pongas algo más caliente.</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Subirla y tontear","ok"],["claro","✋ Decirle que no","no"],["edu","🙂 Poner otra más suave","mid"]],snd:"v30",voz:`${nm} quiere una canción erótica. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("🎵",`${nm} canción: ${{seguir:"la subes",claro:"dices que no",edu:"pones otra"}[a]}`);if(a==="seguir")v26Eff(key,.08);}});
+  }
+  if(k==="describir"&&V30on("describir")&&v30Cd("describir",500000)){
+    v30Ask({k:"v30desc",ic:"💬",title:`${nm} te pide que te describas`,body:`<div class="v26q">«${esc(nm)}: Cuéntame cómo estás vestida… o cómo te ves ahora mismo.»</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Describirte un poco","ok"],["claro","✋ Cortar","no"],["edu","🙂 Cambiar de tema","mid"]],snd:"v30",voz:`${nm} te pide que te describas. ¿Qué haces?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("💬",`${nm} describir: ${{seguir:"te describes",claro:"cortas",edu:"cambias de tema"}[a]}`);if(a==="seguir")v26Eff(key,.1);}});
+  }
+  if(k==="trio"&&V30on("trio")&&v30IsMale(x.p)&&v30Cd("trio",900000)){
+    v30Ask({k:"v30trio",ic:"👥",title:`${nm} propone un trío`,body:`<div class="v26q">«${esc(nm)}: ¿Y si sube otra persona y nos lo pasamos bien los tres?»</div><div class="sub">Situación simulada. ¿Qué haces?</div>`,
+      opts:[["seguir","😏 Seguirle el rollo","ok"],["claro","✋ Decirle que no","no"],["edu","🙂 Decirle que no con educación","mid"]],snd:"v30",voz:`${nm} propone un trío. ¿Qué respondes?`,trip:true,
+      on:a=>{if(a==="ign")a="edu";v30Log("👥",`${nm} trío: ${{seguir:"le sigues",claro:"dices que no",edu:"dices que no con educación"}[a]}`);if(a==="seguir")v26Eff(key,.15);}});
+  }
 }
 function v30Escalada(){
-  if(!V30on("escalada")||!trip||!v30Cd("esc",120000))return;
-  const A=v30Adults();if(!A.length)return;
+  if(!V30on("escalada")||!trip||!v30Cd("esc",900000))return;
+  const A=v30MaleAdults();if(!A.length)return;
   const x=A[0],nm=typeof v28nm==="function"?v28nm(x.p):(x.p.name||"Cliente"),key=x.P&&x.P.key;
   v30Ask({k:"v30asksize",ic:"🔥",title:`¿Le preguntas a ${nm} si la tiene grande?`,body:`<div class="sub">La conversación está muy intensa. Puedes preguntarle o no.</div>`,
     opts:[["ask","🔥 Preguntarle «¿la tienes grande?»","ok"],["no","➡️ No preguntar","no"]],snd:"v30",voz:`¿Le preguntas a ${nm} si la tiene grande?`,trip:true,
@@ -5892,12 +5918,15 @@ function v30Escalada(){
 {const _t=typeof v28TickMore==="function"?v28TickMore:null;
  if(_t){const orig=_t;v28TickMore=function(T,now){try{orig.apply(this,arguments);}catch(e){}
   try{if(!trip||!V30on("grabar")&&!V30on("mirar")&&!V30on("mano")&&!V30on("bragueta")&&!V30on("desvio")&&!V30on("paja")&&!V30on("escalada"))return;
-    if(Math.random()<.015)v30Sit(Math.random()<.5?"mirar":"grabar");
-    else if(Math.random()<.01)v30Sit("mano");
-    else if(Math.random()<.008)v30Sit("bragueta");
-    else if(Math.random()<.006)v30Sit("desvio");
-    else if(Math.random()<.005)v30Sit("paja");
-    if(trip.v28&&trip.v28.int&&trip.v28.int>=7&&Math.random()<.02)v30Escalada();
+    if(Math.random()<.0012)v30Sit(Math.random()<.5?"mirar":"grabar");
+    else if(Math.random()<.0008)v30Sit("mano");
+    else if(Math.random()<.0005)v30Sit("bragueta");
+    else if(Math.random()<.0004)v30Sit("desvio");
+    else if(Math.random()<.0003)v30Sit("paja");
+    else if(Math.random()<.0004)v30Sit("cancion");
+    else if(Math.random()<.0003)v30Sit("describir");
+    else if(Math.random()<.0002)v30Sit("trio");
+    if(trip.v28&&trip.v28.int&&trip.v28.int>=8&&Math.random()<.0006)v30Escalada();
   }catch(e){}};}
 }
 // Settings UI
